@@ -9,24 +9,43 @@
 // -----------------------------------------------------------------------------------------------------------------------------------------
 //  ## REQUEST SERVERS ##
     //const url = "https://api.steampowered.com/ISteamDirectory/GetCMListForConnect/v1/?format=vdf&cellid=0";
-    const url = "https://api.steampowered.com/ISteamDirectory/GetCMListForConnect/v1/";//?format=vdf&cellid=0";
-    async function THING() {
+    // const url = "https://api.steampowered.com/ISteamDirectory/GetCMListForConnect/v1/";//?format=vdf&cellid=0";
+    // async function THING() {
         
-        const response = await fetch(url);
-        const jsonData = await response.json();
-    }
+    //     const response = await fetch(url);
+    //     const jsonData = await response.json();
+    // }
 //
-THING();
+//THING();
 
-var WSS_SERVER = "wss://cmp1-vie1.steamserver.net:27018/cmsocket/";
-const ws = new WebSocket('ws://localhost:3000')
+
+//                         [ PROTOCOL                 HEADER SIZE              BODY (PRE-SERIALIZED) ]
+const ClientHello_packet = [ 0x4D, 0x26, 0x00, 0x80,  0x00, 0x00, 0x00, 0x00,  0x08, 0xAC, 0x80, 0x04];
+const ClientHello_buffer = new ArrayBuffer(ClientHello_packet.length);
+const ClientHello_view = new Uint8Array(ClientHello_buffer);
+ClientHello_view.set(ClientHello_packet);
+
+
+let custom_input_server = "cmp1-vie1.steamserver.net:27018";
+let WSS_SERVER = "wss://"+custom_input_server+"/cmsocket/";
+const ws = new WebSocket(WSS_SERVER)
 ws.onopen = () => {
-  console.log('ws opened on browser')
-  ws.send('hello world')
+    console.log('ws opened')
+    ws.send(ClientHello_view) // HELLO PACKET
+    ws.send() // LOGON PACKET
 }
 
 ws.onmessage = (message) => {
-  console.log(`message received`, message.data)
+    console.log(`message received`, message.data)
+}
+
+
+
+ws.onerror = (event) =>{
+    console.log('ws error')
+}
+ws.onclose = (event) =>{
+    console.log('ws closed')
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
