@@ -1,3 +1,36 @@
+// NOTE: uh
+protobuf.load("awesome.proto", function(err, root) {
+    if (err) throw err;
+
+    // Obtain a message type
+    var AwesomeMessage = root.lookupType("awesomepackage.AwesomeMessage");
+
+    // Exemplary payload
+    var payload = { awesomeField: "AwesomeString" };
+
+    // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
+    var errMsg = AwesomeMessage.verify(payload);
+    if (errMsg) throw Error(errMsg);
+
+    // Create a new message
+    var message = AwesomeMessage.create(payload);
+
+    var buffer = AwesomeMessage.encode(message).finish();
+
+    var message = AwesomeMessage.decode(buffer);
+
+
+    // Maybe convert the message back to a plain object
+    var object = AwesomeMessage.toObject(message, {
+        longs: String,
+        enums: String,
+        bytes: String,
+        // see ConversionOptions
+    });
+});
+
+
+
 
 // NOTE: SOURCED FROM STEAMKIT2 (will add relevant links later)
 
@@ -19,10 +52,12 @@
 //THING();
 
 
+
+
+
 //                         [ PROTOCOL                 HEADER SIZE              BODY (PRE-SERIALIZED) ]
 const ClientHello_packet = [ 0x4D, 0x26, 0x00, 0x80,  0x00, 0x00, 0x00, 0x00,  0x08, 0xAC, 0x80, 0x04];
-const ClientHello_buffer = new ArrayBuffer(ClientHello_packet.length);
-const ClientHello_view = new Uint8Array(ClientHello_buffer);
+const ClientHello_view = new Uint8Array(new ArrayBuffer(ClientHello_packet.length));
 ClientHello_view.set(ClientHello_packet);
 
 
@@ -37,6 +72,7 @@ ws.onopen = () => {
 
 ws.onmessage = (message) => {
     console.log(`message received`, message.data)
+    // process message for type
 }
 
 
