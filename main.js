@@ -1,18 +1,6 @@
 
 import Long from "/DEPENDENCIES/Long.js";
 
-//var protobuf = require("protobufjs");
-//import protobuf from 'https://cdn.jsdelivr.net/npm/protobufjs/dist/protobuf.min.js';
-
-// protobuf.load("awesome.proto", function(err, root) {
-//     if (err)
-//         throw err;
-
-//     // Obtain a message type
-//     var AwesomeMessage = root.lookupType("awesomepackage.AwesomeMessage");
-//     var breaktest = "breake";
-//     console.log(AwesomeMessage)
-// });
 
 // NOTE: uh
 protobuf.load("PROTOGEN/clientserver_login.proto", function(err, root) {
@@ -21,30 +9,31 @@ protobuf.load("PROTOGEN/clientserver_login.proto", function(err, root) {
 
 
     // Obtain a message type
-    const CMsgHeader_Message = root.lookupType("steamproto.CMsgProtoBufHeader");
-    const CMsgLogon_Message = root.lookupType("steamproto.CMsgClientLogon");
+    var CMsgHeader_Message = root.lookupType("steamproto.CMsgProtoBufHeader");
+    var CMsgLogon_Message = root.lookupType("steamproto.CMsgClientLogon");
 
     let header = {
-        client_sessionid: 0, 
+        clientSessionid: 0, // NOTE: this gets encoded in steamkit C#, but not this???
         steamid: new Long(0x00000000, 0x01100001) // 0x0110000100000000
     };
     let logon = {
-        obfuscated_private_ip: 0x45520FF2, // 0xffffffff ^ 0xBAADF00D,
-        deprecated_obfustucated_private_ip: 0x45520FF2,
-        account_name: STATIC_USERNAME,
+        obfuscatedPrivateIp: {v4: 0x45520FF2}, // 0xffffffff ^ 0xBAADF00D,
+        deprecatedObfustucatedPrivateIp: 0x45520FF2,
+        accountName: STATIC_USERNAME,
         password: STATIC_PASSWORD,
-        should_remember_password: false,
-        protocol_version: 0x0001002c,
-        client_os_type: 0x00000010,
-        client_language: "english",
-        cell_id: 0,
-        steam2_ticket_request: false,
-        client_package_version: 1771,
-        supports_rate_limit_response: true,
-        machine_name: "DESKTOP-B2FH41Q (SteamKit2)",
-        machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider )
+        shouldRememberPassword: false,
+        protocolVersion: 0x0001002c,
+        clientOsType: 0x00000010,
+        clientLanguage: "english",
+        cellId: 0,
+        steam2TicketRequest: false,
+        clientPackageVersion: 1771,
+        supportsRateLimitResponse: true,
+        machineName: "DESKTOP-B2FH41Q (SteamKit2)",
+        //machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider ) // pretty sure we cant complete this via browser APIs (NOTE: 0x9b bytes is what we'd usually get from this)
     };
     let serialized = SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
+    console.log(serialized.length);
     console.log(serialized);
 });
 
@@ -53,18 +42,35 @@ function SerializePacket(msg_sig, header, headerproto, body, bodyproto){
     let header_bytes = proto_serialize(header, headerproto);
     let body_bytes = proto_serialize(body, bodyproto);
 
-    let total_packet_size = 8 + header_bytes.length + body_bytes.lenth;
+    let total_packet_size = 8 + header_bytes.length + body_bytes.length;
 
     let packet_buffer = new Uint8Array(new ArrayBuffer(total_packet_size));
     packet_buffer.set(msg_sig);
     packet_buffer.set(int_to_4byte(header_bytes.length), 4);
     packet_buffer.set(header_bytes, 8);
     packet_buffer.set(body_bytes, 8 + header_bytes.length);
+
+    var decomp_body = bodyproto.toObject(bodyproto.decode(body_bytes), {
+        enums: String,  // enums as string names
+        longs: String,  // longs as strings (requires long.js)
+        bytes: String,  // bytes as base64 encoded strings
+        defaults: true, // includes default values
+        arrays: true,   // populates empty arrays (repeated fields) even if defaults=false
+        objects: true,  // populates empty objects (map fields) even if defaults=false
+        oneofs: true    // includes virtual oneof fields set to the present field's name
+    });
+    console.log(body);
+    console.log(decomp_body);
+
     return packet_buffer;
 }
 function proto_serialize(payload, proto){
-    if (proto.verify(payload)) throw Error("proto issue: "+errMsg);
-    return proto.encode(proto.create(payload)).finish();
+    let errMsg = proto.verify(payload)
+    if (errMsg) throw Error("proto issue: "+errMsg);
+
+    let result = proto.encode(proto.create(payload)).finish();
+    console.log(result);
+    return result;
 }
 function int_to_4byte(num){ // encodes to little endian!!!
     return [(num & 0x000000ff), (num & 0x0000ff00) >> 8, (num & 0x00ff0000) >> 16, (num & 0xff000000) >> 24];
