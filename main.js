@@ -1,12 +1,13 @@
+import Long from "long";
+
+
 // NOTE: uh
 protobuf.load("awesome.proto", function(err, root) {
     if (err) throw err;
 
     // Obtain a message type
-    var AwesomeMessage = root.lookupType("awesomepackage.AwesomeMessage");
-
-    // Exemplary payload
-    var payload = { awesomeField: "AwesomeString" };
+    const CMsgHeader_Message = root.lookupType("google.protobuf.CMsgProtoBufHeader");
+    const CMsgLogon_Message = root.lookupType("google.protobuf.CMsgClientLogon");
 
     // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
     var errMsg = AwesomeMessage.verify(payload);
@@ -27,8 +28,41 @@ protobuf.load("awesome.proto", function(err, root) {
         bytes: String,
         // see ConversionOptions
     });
+
+    let header = {
+        client_sessionid: 0, 
+        steamid: new Long(0x00000000, 0x01100001) // 0x0110000100000000
+    };
+    let logon = {
+        obfuscated_private_ip: 0x45520FF2, // 0xffffffff ^ 0xBAADF00D,
+        deprecated_obfustucated_private_ip: 0x45520FF2,
+        account_name: STATIC_USERNAME,
+        password: STATIC_PASSWORD,
+        should_remember_password: false,
+        protocol_version: 0x0001002c,
+        client_os_type: 0x00000010,
+        client_language: "english",
+        cell_id: 0,
+        steam2_ticket_request: false,
+        client_package_version: 1771,
+        supports_rate_limit_response: true,
+        machine_name: "DESKTOP-B2FH41Q (SteamKit2)",
+        machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider )
+    };
+    SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
+
 });
 
+function SerializePacket(msg_sig, header, headerproto, body, bodyproto){
+
+    // write unit
+    // serialize header + write length
+    // write serialized header
+    // serialize body + write it
+}
+function DeserializePacket(){
+
+}
 
 
 
