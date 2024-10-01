@@ -1,67 +1,87 @@
-import Long from "long";
 
 
-// NOTE: uh
+
+
+
 protobuf.load("awesome.proto", function(err, root) {
-    if (err) throw err;
+    if (err)
+        throw err;
 
     // Obtain a message type
-    const CMsgHeader_Message = root.lookupType("google.protobuf.CMsgProtoBufHeader");
-    const CMsgLogon_Message = root.lookupType("google.protobuf.CMsgClientLogon");
+    var AwesomeMessage = root.lookupType("awesomepackage.AwesomeMessage");
+    var breaktest = "breake";
+});
 
-    // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
-    var errMsg = AwesomeMessage.verify(payload);
-    if (errMsg) throw Error(errMsg);
+// NOTE: uh
+//protobuf.load("PROTOGEN/clientserver_login.proto", function(err, root) {
+// protobuf.load("test.proto", function(err, root) {
+//     if (err) throw err;
 
-    // Create a new message
-    var message = AwesomeMessage.create(payload);
+//     let CMessage = root.lookupType("awesomepackage.CIP");
+//     return;
 
-    var buffer = AwesomeMessage.encode(message).finish();
+
+//     // Obtain a message type
+//     const CMsgHeader_Message = root.lookupType("steamproto.CMsgProtoBufHeader");
+//     const CMsgLogon_Message = root.lookupType("steamproto.CMsgClientLogon");
+
+//     let header = {
+//         client_sessionid: 0, 
+//         steamid: new Long(0x00000000, 0x01100001) // 0x0110000100000000
+//     };
+//     let logon = {
+//         obfuscated_private_ip: 0x45520FF2, // 0xffffffff ^ 0xBAADF00D,
+//         deprecated_obfustucated_private_ip: 0x45520FF2,
+//         account_name: STATIC_USERNAME,
+//         password: STATIC_PASSWORD,
+//         should_remember_password: false,
+//         protocol_version: 0x0001002c,
+//         client_os_type: 0x00000010,
+//         client_language: "english",
+//         cell_id: 0,
+//         steam2_ticket_request: false,
+//         client_package_version: 1771,
+//         supports_rate_limit_response: true,
+//         machine_name: "DESKTOP-B2FH41Q (SteamKit2)",
+//         machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider )
+//     };
+//     let serialized = SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
+//     let toast = "yummy";
+// });
+
+function SerializePacket(msg_sig, header, headerproto, body, bodyproto){
+
+    let header_bytes = proto_serialize(header, headerproto);
+    let body_bytes = proto_serialize(body, bodyproto);
+
+    let total_packet_size = 8 + header_bytes.length + body_bytes.lenth;
+
+    let packet_buffer = new Uint8Array(new ArrayBuffer(total_packet_size));
+    packet_buffer.set(msg_sig);
+    packet_buffer.set(int_to_4byte(header_bytes.length), 4);
+    packet_buffer.set(header_bytes, 8);
+    packet_buffer.set(body_bytes, 8 + header_bytes.length);
+    return packet_buffer;
+}
+function proto_serialize(payload, proto){
+    if (proto.verify(payload)) throw Error("proto issue: "+errMsg);
+    return proto.encode(proto.create(payload)).finish();
+}
+function int_to_4byte(num){ // encodes to little endian!!!
+    return [(num & 0x000000ff), (num & 0x0000ff00) >> 8, (num & 0x00ff0000) >> 16, (num & 0xff000000) >> 24];
+}
+
+
+
+function DeserializePacket(){
 
     var message = AwesomeMessage.decode(buffer);
-
-
     // Maybe convert the message back to a plain object
     var object = AwesomeMessage.toObject(message, {
         longs: String,
         enums: String,
         bytes: String,
-        // see ConversionOptions
     });
-
-    let header = {
-        client_sessionid: 0, 
-        steamid: new Long(0x00000000, 0x01100001) // 0x0110000100000000
-    };
-    let logon = {
-        obfuscated_private_ip: 0x45520FF2, // 0xffffffff ^ 0xBAADF00D,
-        deprecated_obfustucated_private_ip: 0x45520FF2,
-        account_name: STATIC_USERNAME,
-        password: STATIC_PASSWORD,
-        should_remember_password: false,
-        protocol_version: 0x0001002c,
-        client_os_type: 0x00000010,
-        client_language: "english",
-        cell_id: 0,
-        steam2_ticket_request: false,
-        client_package_version: 1771,
-        supports_rate_limit_response: true,
-        machine_name: "DESKTOP-B2FH41Q (SteamKit2)",
-        machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider )
-    };
-    SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
-
-});
-
-function SerializePacket(msg_sig, header, headerproto, body, bodyproto){
-
-    // write unit
-    // serialize header + write length
-    // write serialized header
-    // serialize body + write it
-}
-function DeserializePacket(){
-
 }
 
 
@@ -97,26 +117,39 @@ ClientHello_view.set(ClientHello_packet);
 
 let custom_input_server = "cmp1-vie1.steamserver.net:27018";
 let WSS_SERVER = "wss://"+custom_input_server+"/cmsocket/";
-const ws = new WebSocket(WSS_SERVER)
-ws.onopen = () => {
-    console.log('ws opened')
-    ws.send(ClientHello_view) // HELLO PACKET
-    ws.send() // LOGON PACKET
-}
+// const ws = new WebSocket(WSS_SERVER)
+// ws.onopen = () => {
+//     console.log('ws opened')
+//     ws.send(ClientHello_view) // HELLO PACKET
+//     ws.send() // LOGON PACKET
+// }
 
-ws.onmessage = (message) => {
-    console.log(`message received`, message.data)
-    // process message for type
-}
+// ws.onmessage = (message) => {
+//     console.log(`message received`, message.data)
+//     // process message for type
+// }
 
 
 
-ws.onerror = (event) =>{
-    console.log('ws error')
-}
-ws.onclose = (event) =>{
-    console.log('ws closed')
-}
+// ws.onerror = (event) =>{
+//     console.log('ws error')
+// }
+// ws.onclose = (event) =>{
+//     console.log('ws closed')
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 // -- RELEVANT CODE SNIPPETS --
