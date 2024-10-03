@@ -6,11 +6,13 @@ import Long from "/DEPENDENCIES/Long.js";
 var CMsgHeader_Message = null;
 var CMsgLogon_Message = null;
 var CMsgMulti_Message = null;
+var CMsgClientLogonResponse_Message = null;
 protobuf.load("PROTOGEN/clientserver_login.proto", function(err, root) {
     if (err) throw err;
     CMsgHeader_Message = root.lookupType("steamproto.CMsgProtoBufHeader");
     CMsgLogon_Message = root.lookupType("steamproto.CMsgClientLogon");
     CMsgMulti_Message = root.lookupType("steamproto.CMsgMulti");
+    CMsgClientLogonResponse_Message = root.lookupType("steamproto.CMsgClientLogonResponse");
 
     init_steam_connection();
 });
@@ -124,17 +126,21 @@ async function DeserializePacket(buffer){
         // Maybe convert the message back to a plain object
         header_object = proto_deserialize(buffer.subarray( 8, 8 + HeaderSize), CMsgHeader_Message);
     } else { // otherwise struct header (NOTE: probably not used but steamkit has this so) // WARNING: names have not been matched up, so consider this NOT-IN-USE
-        throw "packet had non-proto header!! currently unsupported!!!"
+        //throw "packet had non-proto header!! currently unsupported!!!"
+        console.log("recieved non-proto packet, type: " + enum_dict[message_type]);
         // read_position += 1;
         // HeaderSize = dataView.getUint8(4);
         // header_object = {
-        //     HeaderVersion: dataView.getUint16(5, true),
-        //     TargetJobID:   dataView.getBigUint64(7, true),
-        //     SourceJobID:   dataView.getBigUint64(15, true),
-        //     HeaderCanary:  dataView.getUint8(23),
-        //     steamid:       dataView.getBigUint64(24, true),
-        //     SessionID:     dataView.getInt32(32, true)
+        //     HeaderVersion: dataView.getUint16(5, true), // 2
+        //     TargetJobID:   dataView.getBigUint64(7, true), // 8
+        //     SourceJobID:   dataView.getBigUint64(15, true), // 8
+        //     HeaderCanary:  dataView.getUint8(23), // 1
+        //     steamid:       dataView.getBigUint64(24, true), // 8
+        //     SessionID:     dataView.getInt32(32, true) // 4
         // };
+        // console.log("static packet header size: " + HeaderSize);
+        // console.log(header_object);
+        return;
     }
     read_position += HeaderSize;
 
@@ -158,7 +164,7 @@ async function DeserializePacket(buffer){
         } else {
             multi_buf = multi_obj.messageBody;
         }
-        
+
         read_position = 0;
         while (read_position+4 <= multi_buf.length){
             // read bundle length
@@ -167,7 +173,9 @@ async function DeserializePacket(buffer){
             if (read_position+chunk_length > multi_buf.length)
                 throw "trying to read multi chunk out of bounds!!";
 
-            await DeserializePacket(multi_buf.subarray(read_position, read_position + chunk_length));
+            try{await DeserializePacket(multi_buf.subarray(read_position, read_position + chunk_length));
+            } catch (ex){ console.log("caught error while processing multi:" + ex);}
+            
             read_position += chunk_length;
         }
         if (read_position != multi_buf.length){
@@ -175,7 +183,8 @@ async function DeserializePacket(buffer){
         }
 
     } else if (message_type == 751){ // ClientLogOnResponse
-
+        let response_obj = proto_deserialize(buffer.subarray(read_position), CMsgClientLogonResponse_Message);
+        console.log(response_obj);
     } else if (message_type == 757){ // ClientLoggedOff 
 
     } else if (message_type == 5500){ // ClientServerUnavailable 
@@ -190,7 +199,7 @@ async function DeserializePacket(buffer){
 
     }
 
-    return {type: "", header: "", body: ""}
+    return;
 }
 function proto_deserialize(buffer, proto){
     return proto.toObject(proto.decode(buffer), {
