@@ -13,6 +13,7 @@ protobuf.load("PROTOGEN/clientserver_login.proto", function(err, root) {
     CMsgLogon_Message = root.lookupType("steamproto.CMsgClientLogon");
     CMsgMulti_Message = root.lookupType("steamproto.CMsgMulti");
     CMsgClientLogonResponse_Message = root.lookupType("steamproto.CMsgClientLogonResponse");
+    
 
     init_steam_connection();
 });
