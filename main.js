@@ -3,8 +3,10 @@ import Long from "/DEPENDENCIES/Long.js";
 var WS = null; // our websocket handle to the steam servers
 var logon_session_header = null;
 var logon_session_details = null; // contains the response data from our username+password logon (steam ID etc)
-function disconnect() {
-    console.log("Connection closed.")
+function disconnect(reason = null) {
+    if (reason != null) console.log("Connection closed: " + reason)
+    else                console.log("Connection closed.")
+    logon_session_header = null;
     logon_session_details = null; 
     Heartbeat_Stop(); 
     if (WS!=null){
@@ -244,9 +246,9 @@ function disconnect() {
             Heartbeat_Start(logon_session_details.legacyOutOfGameHeartbeatSeconds);
             Steam_SendWorkshopQuery();
         } else if (message_type == 757){ // ClientLoggedOff 
-
+            disconnect("Client was logged off");
         } else if (message_type == 5500){ // ClientServerUnavailable 
-
+            disconnect("Servers said to be unavailable");
         } else if (message_type == 783){ // ClientCMList
 
         } else if (message_type == 850){ // ClientSessionToken
@@ -301,7 +303,6 @@ function disconnect() {
             Steam_SendHello();
             Steam_SendLogon();
         }
-
         WS.onmessage = (message) => {
             console.log("packet recieved!!")
 
@@ -323,14 +324,11 @@ function disconnect() {
                 console.log(message.data)
             }
         }
-
-
-
         WS.onerror = (event) =>{
-            console.log('WS error')
+            disconnect("Websocket Error");
         }
         WS.onclose = (event) =>{
-            console.log('WS closed')
+            disconnect("WS closed");
         }
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
