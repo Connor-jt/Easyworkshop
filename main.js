@@ -7,12 +7,16 @@ var CMsgHeader_Message = null;
 var CMsgLogon_Message = null;
 var CMsgMulti_Message = null;
 var CMsgClientLogonResponse_Message = null;
+var CPublishedFile_QueryFiles_Message = null;
+var CPublishedFile_QueryFilesResponse_Message = null;
 protobuf.load("PROTOGEN/clientserver_login.proto", function(err, root) {
     if (err) throw err;
     CMsgHeader_Message = root.lookupType("steamproto.CMsgProtoBufHeader");
     CMsgLogon_Message = root.lookupType("steamproto.CMsgClientLogon");
     CMsgMulti_Message = root.lookupType("steamproto.CMsgMulti");
     CMsgClientLogonResponse_Message = root.lookupType("steamproto.CMsgClientLogonResponse");
+    CPublishedFile_QueryFiles_Message = root.lookupType("steamproto.CPublishedFile_QueryFiles_Request");
+    CPublishedFile_QueryFilesResponse_Message = root.lookupType("steamproto.CPublishedFile_QueryFiles_Response");
     
 
     init_steam_connection();
@@ -49,19 +53,50 @@ function Steam_SendLogon(){
         //machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider ) // pretty sure we cant complete this via browser APIs (NOTE: 0x9b bytes is what we'd usually get from this)
     };
     let serialized = SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
-    WS.send(serialized)
-    console.log("logon sent!!!")
+    WS.send(serialized);
+    console.log("logon sent!!!");
 }
 function Steam_SendHeartbeat(){
 
 }
+
+var job_index = 0;
+function MakeJobid(){
+    job_index += 1;
+    // 20 bits, job index
+    // 30 bits, timestamp (seconds since 2005) 
+    //  4 bits, processid
+    // 10 bits, boxid
+
+    let packed_index = job_index & 0xfffff;
+
+    let seconds = Math.floor((new Date().getTime() - new Date(2005, 1, 1, 0, 0, 0, 0).getTime()) / 1000);
+    let packed_seconds = (seconds & 0x3FFFFFFF) << 20;
+    
+    return (packed_seconds | job_index);
+}
+
 function Steam_SendWorkshopQuery(){
+    let jobid = MakeJobid();
+    let header = {
+        targetJobName: "PublishedFile.QueryFiles#1",
+        jobidSource: jobid
+    };
+    let query = {
+        appid: 105600, searchText: "gold",
+        numperpage: 10,
+        returnPlaytimeStats:1, returnKvTags:true, returnVoteData:true, queryType:0, //return_reactions:true
+        returnDetails: true, returnPreviews: true, returnShortDescription:true, returnTags:true
+    };
+    let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
+    WS.send(serialized)
 
+    console.log("query sent!!!");
+    
 }
 
-function Steam_RecieveLogon(){
 
-}
+
 
 function SerializePacket(msg_sig, header, headerproto, body, bodyproto){
     let header_bytes = proto_serialize(header, headerproto);
@@ -186,6 +221,7 @@ async function DeserializePacket(buffer){
     } else if (message_type == 751){ // ClientLogOnResponse
         let response_obj = proto_deserialize(buffer.subarray(read_position), CMsgClientLogonResponse_Message);
         console.log(response_obj);
+        Steam_SendWorkshopQuery();
     } else if (message_type == 757){ // ClientLoggedOff 
 
     } else if (message_type == 5500){ // ClientServerUnavailable 
@@ -197,7 +233,9 @@ async function DeserializePacket(buffer){
     } else if (message_type == 146){ // ServiceMethod
 
     } else if (message_type == 147){ // ServiceMethodResponse
-
+        
+        let response_obj = proto_deserialize(buffer.subarray(read_position), CPublishedFile_QueryFilesResponse_Message);
+        console.log(response_obj);
     }
 
     return;
