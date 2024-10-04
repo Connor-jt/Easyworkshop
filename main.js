@@ -1,6 +1,17 @@
 import Long from "/DEPENDENCIES/Long.js";
 
 var WS = null; // our websocket handle to the steam servers
+var logon_session_header = null;
+var logon_session_details = null; // contains the response data from our username+password logon (steam ID etc)
+function disconnect() {
+    console.log("Connection closed.")
+    logon_session_details = null; 
+    Heartbeat_Stop(); 
+    if (WS!=null){
+        if (WS.readyState !== WebSocket.CLOSED && WS.readyState !== WebSocket.CLOSED) WS.close();
+        WS = null;
+    } 
+}
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region UTILITY FUNCTIONS
@@ -19,6 +30,9 @@ var WS = null; // our websocket handle to the steam servers
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region PROTOBUF INIT
+    protobuf.util.Long = Long;
+    protobuf.configure();
+
     var CMsgHeader_Message = null;
     var CMsgLogon_Message = null;
     var CMsgMulti_Message = null;
@@ -48,17 +62,20 @@ var WS = null; // our websocket handle to the steam servers
         let packed_seconds = (seconds & 0x3FFFFFFF) << 20;
         return (packed_seconds | (job_index & 0xfffff));
     }
-    function SerializePacket(msg_sig, header, headerproto, body, bodyproto){
+    function SerializePacket(msg_sig, header, headerproto, body = undefined, bodyproto = undefined){
         let header_bytes = proto_serialize(header, headerproto);
-        let body_bytes = proto_serialize(body, bodyproto);
-    
+        let body_bytes;
+        if (body != undefined) body_bytes = proto_serialize(body, bodyproto);
+        else                   body_bytes = [];
+
         let total_packet_size = 8 + header_bytes.length + body_bytes.length;
     
         let packet_buffer = new Uint8Array(new ArrayBuffer(total_packet_size));
         packet_buffer.set(msg_sig);
         packet_buffer.set(int_to_4byte(header_bytes.length), 4);
         packet_buffer.set(header_bytes, 8);
-        packet_buffer.set(body_bytes, 8 + header_bytes.length);
+        if (body != undefined)
+            packet_buffer.set(body_bytes, 8 + header_bytes.length);
     
         return packet_buffer;
     }
@@ -71,7 +88,7 @@ var WS = null; // our websocket handle to the steam servers
     }
     function proto_deserialize(buffer, proto){
         return proto.toObject(proto.decode(buffer), {
-            longs: String,
+            longs: Long,
             enums: String,
             //bytes: String, // default enocdes them into uint8arrays, why would we want anything other than that ??????????
         });
@@ -111,9 +128,6 @@ var WS = null; // our websocket handle to the steam servers
         let serialized = SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
         WS.send(serialized);
         console.log("logon sent!!!");
-    }
-    function Steam_SendHeartbeat(){
-
     }
     function Steam_SendWorkshopQuery(){
         let jobid = MakeJobid();
@@ -222,7 +236,12 @@ var WS = null; // our websocket handle to the steam servers
 
         } else if (message_type == 751){ // ClientLogOnResponse
             let response_obj = proto_deserialize(buffer.subarray(read_position), CMsgClientLogonResponse_Message);
+            logon_session_header = header_object;
+            logon_session_details = response_obj;
+            console.log(header_object);
             console.log(response_obj);
+
+            Heartbeat_Start(logon_session_details.legacyOutOfGameHeartbeatSeconds);
             Steam_SendWorkshopQuery();
         } else if (message_type == 757){ // ClientLoggedOff 
 
@@ -242,6 +261,30 @@ var WS = null; // our websocket handle to the steam servers
 
         return;
     }
+//#endregion -----------------------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region STEAM HEARTBEAT
+    var heartbeater = null;
+    function Heartbeat_Start(interval_seconds){
+        heartbeater = setInterval(Heartbeat, interval_seconds * 1000)
+    }
+    function Heartbeat_Stop(){
+        if (heartbeater != null){
+            clearInterval(heartbeater)
+            heartbeater = null;
+        }
+    }
+    function Heartbeat(){
+        let header = {
+            clientSessionid: logon_session_header.clientSessionid,
+            steamid: logon_session_header.steamid
+        };
+        let serialized = SerializePacket([0xBF,0x2,0x0,0x80], header, CMsgHeader_Message);
+        WS.send(serialized);
+        console.log("heartbeat");
+    }
+
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
