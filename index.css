@@ -12,10 +12,11 @@ body{
     top: 0;
     bottom: 0;
 }
+
 .login_panel{
     background-color: #161616;
     border-radius: 7px;
-    padding: 0px 40px 22px 40px;
+    padding: 20px 40px 22px 40px;
 
     position: fixed;
     top: 50%;
@@ -33,7 +34,6 @@ body{
     /* background-image: linear-gradient(#1383b5, #0f2556, #101b2f); */
     /* background-image: linear-gradient(#101b2f, #0f2556,  #1383b5); */
     background-image: linear-gradient(#101d2e, #06183c, #0e2455, #144e80, #1483b6);
-    margin-top: 20px;
     width: 100%; 
     height: 64px; 
     border-radius: 7px;
@@ -78,7 +78,7 @@ body{
     background-color: #008eee;
 }
 .login_submit:active{
-    background-color: #2daaff;
+    background-color: #a3daff;
 }
 .login_NOTE{
     color: red;
@@ -91,4 +91,33 @@ body{
 }
 .block{
     display: block;
+}
+
+.error_panel{
+    position: absolute;
+    bottom: 100px;
+    left: 0px;
+    right: 0px;
+    text-align: center;
+}
+.error_item{
+    width: 300px;
+    /* border: red solid 5px; */
+    border-radius: 18px;
+    background-color: rgb(192, 0, 0);
+    margin: 5px auto;
+    padding: 10px 80px;
+    color: white;
+    animation: hideMe 5s forwards;
+}
+@keyframes hideMe{
+    0%{
+        opacity: 1;
+    }
+    50%{
+        opacity: 0.85;
+    }
+    100%{
+        opacity: 0;
+    }
 }

@@ -49,8 +49,6 @@ function disconnect(reason = null) {
         CPublishedFile_QueryFiles_Message = root.lookupType("steamproto.CPublishedFile_QueryFiles_Request");
         CPublishedFile_QueryFilesResponse_Message = root.lookupType("steamproto.CPublishedFile_QueryFiles_Response");
         CMsgHeader_Message = root.lookupType("steamproto.CMsgProtoBufHeader");
-
-        init_steam_connection();
     });
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
@@ -336,21 +334,55 @@ function disconnect(reason = null) {
 
 
 
+// USER INTERFACE RELATED SECTIONS //
+
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region PAGE LOGIN
+    function try_cached_credentials(){
+
+    }
+    function login_submit(){
+        print_error("feature not implemented!");
+    }
+
+    function login_valid_check(){
+
+    }
+    try_cached_credentials();
+//#endregion -----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region ERROR DISPLAY
+    const error_panel = document.getElementById("error_view");
+    function print_error(error_msg){
+        var error_div = document.createElement('div');
+        error_div.className = 'error_item';
+        error_div.innerText = error_msg
+        error_panel.appendChild(error_div);
+
+        setTimeout(remove_error, 5000, error_div);
+    }
+    function remove_error(error_div){
+        error_panel.removeChild(error_div)
+    }
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 
 
 
 
 
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region FUNCTION EXPORTS
+window.login_submit=login_submit;
 
 
-
-
-
-
-
-
-
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 
 
