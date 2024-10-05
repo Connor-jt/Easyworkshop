@@ -339,17 +339,30 @@ function disconnect(reason = null) {
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region PAGE LOGIN
+    const username_field = document.getElementById("username");
+    const password_field = document.getElementById("password");
+    const submit_field = document.getElementById("login_submit_button");
     function try_cached_credentials(){
-
+        if (typeof STATIC_USERNAME !== 'undefined' && STATIC_USERNAME != null)
+            username_field.value = STATIC_USERNAME;
+        if (typeof STATIC_PASSWORD !== 'undefined' && STATIC_PASSWORD != null)
+            password_field.value = STATIC_PASSWORD;
+        login_field_changed();
     }
     function login_submit(){
         print_error("feature not implemented!");
     }
-
+    function login_field_changed(){
+        if (username_field.value && password_field.value)
+            submit_field.removeAttribute("disabled");
+        else
+            submit_field.setAttribute("disabled", "disabled");
+    }
     function login_valid_check(){
 
     }
     try_cached_credentials();
+    
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 
@@ -380,12 +393,8 @@ function disconnect(reason = null) {
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region FUNCTION EXPORTS
 window.login_submit=login_submit;
-
-
+window.login_field_changed=login_field_changed;
 //#endregion -----------------------------------------------------------------------------------------------------------------
-
-
-
 
 
 

@@ -80,6 +80,9 @@ body{
 .login_submit:active{
     background-color: #a3daff;
 }
+.login_submit:disabled{
+    background-color: #002c49;
+}
 .login_NOTE{
     color: red;
 }

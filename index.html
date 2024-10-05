@@ -18,10 +18,10 @@
                 <!-- <img src="RES/logo_opaque.png" class="longin_logo" alt="logo"></img> -->
                 <h2>Sign in with Steam</h2>
 
-                <input type="text" id="username" class="block login_field" placeholder="Username.." />
-                <input type="password" id="password" class="block login_field" placeholder="Password.." />
+                <input type="text" id="username" class="block login_field" oninput="login_field_changed();" placeholder="Username.." />
+                <input type="password" id="password" class="block login_field" oninput="login_field_changed();" placeholder="Password.." />
 
-                <input type="submit" value="Submit" class="block login_submit" onclick="login_submit();">
+                <input type="submit" id="login_submit_button" value="Submit" class="block login_submit" onclick="login_submit();">
 
                 <span class="block login_disclaimer"><span class="login_NOTE">NOTE:</span> Do not enter steam credientals if you do not know what you're doing here.</span>
             </div>
