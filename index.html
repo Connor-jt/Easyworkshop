@@ -1,24 +1,37 @@
 <!DOCTYPE html>
 <html>
     <head></head>
+        <link rel="stylesheet" href="index.css">
         <script type="module" src="DEPENDENCIES/Long.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/protobufjs@7.4.0/dist/protobuf.min.js"></script>
         <script type="text/javascript" src="steam_packet_protocols.js"></script>
         <script type="text/javascript" src="EXCLUDE/logon_details.js"></script>
-        <script type="module" src="main.js"></script>
+        <!--script type="module" src="main.js"></script-->
     </head>
     <body>
+        <div id="login_view" class="fullscreen_panel">
+            <div class="login_panel">
+                <img src="RES/logo_cutout.png" class="longin_logo" alt="logo"></img>
+                <h1>Sign into Steam</h1>
+
+                <input type="text" id="username" class="block login_field" placeholder="Enter username.." />
+                <input type="password" id="password" class="block login_field" placeholder="Enter password.." />
+
+                <input type="submit" value="Submit" class="block login_submit">
+
+                <span class="block login_disclaimer"><span class="login_NOTE">NOTE:</span> Do not enter steam credientals if you do not know what you're doing here.</span>
+            </div>
+        </div>
+        <!-- <div id="browser_view" class="fullscreen_panel">
+            
+        </div>
+        <div id="details_view" class="fullscreen_panel">
+            
+        </div>
         <div id="loading_view" class="fullscreen_panel">
             
-        </div>
-        <div id="login_view" class="fullscreen_panel">
+        </div> -->
 
-        </div>
-        <div id="browser_view" class="fullscreen_panel">
-            
-        </div>
-    <h1>My First Heading</h1>
-    <p>My first paragraph.</p>
 
     </body>
 </html>

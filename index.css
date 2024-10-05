@@ -1,8 +1,77 @@
 
+body{
+    background-color: #0e0d0c;
+    color: white;
+}
+
 .fullscreen_panel{
     position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+.login_panel{
+    background-color: #161616;
+    border-radius: 7px;
+    padding: 0px 40px 22px 40px;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    height: auto;
+    -webkit-transform: translate(-50%,-50%);
+    -moz-transform: translate(-50%,-50%);
+    -ms-transform: translate(-50%,-50%);
+    -o-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+}
+.longin_logo{
+    margin: 20px 0px 0px 85px;
+    width: 50px;
+    height: 50px;
+}
+.login_field{
+    margin-top: 20px;
+    width: 212px;
+    height: 35px;
+    color: white;
+    /* background-color: #2b2b2b; */
+    background-color: transparent;
+    border-color: #878787;
+    border-width: 0px;
+    border-bottom-width: 1px;
+    border-style: solid;
+}  
+.login_submit{
+    margin-top: 35px;
+    background-color: #007acc;
+    color: white;
+    width: 220px;
+    height: 35px;
+    border-radius: 15px;
+    border: 0px;
+
+    -webkit-transition: background-color 80ms linear;
+    -ms-transition: background-color 80ms linear;
+    transition: background-color 80ms linear;
+}
+.login_submit:hover{
+    background-color: #008eee;
+}
+.login_submit:active{
+    background-color: #2daaff;
+}
+.login_NOTE{
+    color: white;
+}
+.login_disclaimer{
+    margin-top: 80px;
+    width: 220px;
+    color: gray;
+    font-size: small;
+}
+.block{
+    display: block;
 }
