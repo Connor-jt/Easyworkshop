@@ -1,6 +1,7 @@
 
 body{
     background-color: #0e0d0c;
+    background-image: linear-gradient(#0e0d0c, #0a1424);
     color: white;
 }
 
@@ -27,8 +28,24 @@ body{
     -o-transform: translate(-50%,-50%);
     transform: translate(-50%,-50%);
 }
+.login_header{
+    background-color: #081a41;
+    /* background-image: linear-gradient(#1383b5, #0f2556, #101b2f); */
+    /* background-image: linear-gradient(#101b2f, #0f2556,  #1383b5); */
+    background-image: linear-gradient(#101d2e, #06183c, #0e2455, #144e80, #1483b6);
+    margin-top: 20px;
+    width: 100%; 
+    height: 64px; 
+    border-radius: 7px;
+    text-align: center;
+}
+.login_header_text{
+    text-align: center;
+}
 .longin_logo{
-    margin: 20px 0px 0px 85px;
+    vertical-align: middle;
+    margin-top: 7px;
+    margin-left: 15px;
     width: 50px;
     height: 50px;
 }
@@ -64,7 +81,7 @@ body{
     background-color: #2daaff;
 }
 .login_NOTE{
-    color: white;
+    color: red;
 }
 .login_disclaimer{
     margin-top: 80px;
