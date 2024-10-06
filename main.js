@@ -3,44 +3,32 @@ import Long from "/DEPENDENCIES/Long.js";
 var WS = null; // our websocket handle to the steam servers
 var logon_session_header = null;
 var logon_session_details = null; // contains the response data from our username+password logon (steam ID etc)
-function disconnect(reason = null) {
-    let log;
-    if (reason != null) log = "Connection closed: " + reason;
-    else                log = "Connection closed.";
-    console.log(log);
-    print(log);
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region DISCONNECT
+    function disconnect(reason = null) {
+        let log;
+        if (reason != null) log = "Connection closed: " + reason;
+        else                log = "Connection closed.";
+        console.log(log);
+        print(log);
 
-    logon_session_header = null;
-    logon_session_details = null; 
-    switch_page(LOGIN_PAGE);
+        logon_session_header = null;
+        logon_session_details = null; 
+        switch_page(LOGIN_PAGE);
 
-    Heartbeat_Stop(); 
-    if (WS!=null){
-        if (WS.readyState !== WebSocket.CLOSED && WS.readyState !== WebSocket.CLOSED) WS.close();
-        WS = null;
-    } 
-}
-var ACTIVE_PAGE = 0;
-const LOGIN_PAGE = 0;
-const LOADING_PAGE = 1;
-const BROWSE_PAGE = 2;
-const DETAILS_PAGE = 3;
-const _LOGIN_PAGE = document.getElementById("login_view")
-const _LOADING_PAGE = document.getElementById("loading_view")
-const _BROWSE_PAGE = document.getElementById("browser_view")
-const _DETAILS_PAGE = document.getElementById("details_view")
-function switch_page(page_index){
-    console.log("switching to page: " + page_index)
-    ACTIVE_PAGE = page_index;
-    _LOGIN_PAGE.style.display   = "none";
-    //_LOADING_PAGE.style.display = "none";
-    //_BROWSE_PAGE.style.display  = "none";
-    //_DETAILS_PAGE.style.display = "none";
-    if (page_index == LOGIN_PAGE  ) _LOGIN_PAGE.style.display    = "block";
-    //if (page_index == LOADING_PAGE) _LOADING_PAGE.style.display  = "block";
-    //if (page_index == BROWSE_PAGE ) _BROWSE_PAGE.style.display   = "block";
-    //if (page_index == DETAILS_PAGE) _DETAILS_PAGE.style.display  = "block";
-}
+        Heartbeat_Stop(); 
+        if (WS!=null){
+            if (WS.readyState !== WebSocket.CLOSED && WS.readyState !== WebSocket.CLOSED) WS.close();
+            WS = null;
+        } 
+    }
+//#endregion -----------------------------------------------------------------------------------------------------------------
+
+
+
+
+// STEAM API RELATED SECTIONS //
+
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region UTILITY FUNCTIONS
@@ -410,9 +398,30 @@ function switch_page(page_index){
     
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
-
-
-
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region PAGE NAVIGATION
+    var ACTIVE_PAGE = 0;
+    const LOGIN_PAGE = 0;
+    const LOADING_PAGE = 1;
+    const BROWSE_PAGE = 2;
+    const DETAILS_PAGE = 3;
+    const _LOGIN_PAGE = document.getElementById("login_view")
+    const _LOADING_PAGE = document.getElementById("loading_view")
+    const _BROWSE_PAGE = document.getElementById("browser_view")
+    const _DETAILS_PAGE = document.getElementById("details_view")
+    function switch_page(page_index){
+        console.log("switching to page: " + page_index)
+        ACTIVE_PAGE = page_index;
+        _LOGIN_PAGE.style.display   = "none";
+        _LOADING_PAGE.style.display = "none";
+        //_BROWSE_PAGE.style.display  = "none";
+        //_DETAILS_PAGE.style.display = "none";
+        if (page_index == LOGIN_PAGE  ) _LOGIN_PAGE.style.display    = "block";
+        if (page_index == LOADING_PAGE) _LOADING_PAGE.style.display  = "block";
+        //if (page_index == BROWSE_PAGE ) _BROWSE_PAGE.style.display   = "block";
+        //if (page_index == DETAILS_PAGE) _DETAILS_PAGE.style.display  = "block";
+    }
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region ERROR DISPLAY
@@ -435,7 +444,6 @@ function switch_page(page_index){
 
 
 
-
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region FUNCTION EXPORTS
 window.login_submit=login_submit;
@@ -452,7 +460,7 @@ window.login_field_changed=login_field_changed;
 
 
 
-
+// WIP/REFERENCE CODE SECTION //
 
 
 // ---------------------------------------------------------------------------------------------------------------------------
