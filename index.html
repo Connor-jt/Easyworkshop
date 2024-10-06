@@ -9,7 +9,7 @@
         <script type="module" src="main.js"></script>
     </head>
     <body>
-        <div id="login_view" class="fullscreen_panel">
+        <div id="login_view" class="fullscreen_panel" >
             <div class="login_panel">
                 <div class="login_header">
                     <b class="login_header_text">Easy Workshop.</b>
@@ -26,10 +26,29 @@
                 <span class="block login_disclaimer"><span class="login_NOTE">NOTE:</span> Do not enter steam credientals if you do not know what you're doing here.</span>
             </div>
         </div>
-        <!-- <div id="browser_view" class="fullscreen_panel">
-            
+        <div id="browser_view" class="fullscreen_panel browser" style="display: none;">
+            <div class="browser_header">
+                <span style="margin-right: 20px;">0 results</span>
+
+                <label for="search_field">Search</label>
+                <input type="text" id="search_field" style="margin-right: 20px;" placeholder="filter.." />
+                
+                <label for="sort-select">Sort by</label>
+                <select name="sort" id="sort-select">
+                    <option value="popular">Popular</option>
+                    <option value="latest">Latest</option>
+                </select>
+
+
+            </div>
+            <div id="browser_content">
+                <div class="browser_filter_panel"></div>
+                <div class="browser_gallery_panel" id="browser_gallery_view">
+
+                </div>
+            </div>
         </div>
-        <div id="details_view" class="fullscreen_panel">
+        <!-- <div id="details_view" class="fullscreen_panel">
             
         </div> -->
         <div id="loading_view" class="loading_panel" style="display: none;">

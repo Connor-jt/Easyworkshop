@@ -256,7 +256,7 @@ var logon_session_details = null; // contains the response data from our usernam
                 logon_session_details = response_obj;
                 console.log(header_object);
                 console.log(response_obj);
-
+                switch_page(BROWSE_PAGE);
                 print("successfully logged in!", true);
                 Heartbeat_Start(logon_session_details.legacyOutOfGameHeartbeatSeconds);
                 Steam_SendWorkshopQuery();
@@ -276,6 +276,7 @@ var logon_session_details = null; // contains the response data from our usernam
         } else if (message_type == 147){ // ServiceMethodResponse
             
             let response_obj = proto_deserialize(buffer.subarray(read_position), CPublishedFile_QueryFilesResponse_Message);
+            ingest_mod_list(response_obj);
             console.log(response_obj);
             print("recieved query response!!", true);
         }
@@ -414,11 +415,11 @@ var logon_session_details = null; // contains the response data from our usernam
         ACTIVE_PAGE = page_index;
         _LOGIN_PAGE.style.display   = "none";
         _LOADING_PAGE.style.display = "none";
-        //_BROWSE_PAGE.style.display  = "none";
+        _BROWSE_PAGE.style.display  = "none";
         //_DETAILS_PAGE.style.display = "none";
         if (page_index == LOGIN_PAGE  ) _LOGIN_PAGE.style.display    = "block";
         if (page_index == LOADING_PAGE) _LOADING_PAGE.style.display  = "block";
-        //if (page_index == BROWSE_PAGE ) _BROWSE_PAGE.style.display   = "block";
+        if (page_index == BROWSE_PAGE ) _BROWSE_PAGE.style.display   = "block";
         //if (page_index == DETAILS_PAGE) _DETAILS_PAGE.style.display  = "block";
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
@@ -440,6 +441,41 @@ var logon_session_details = null; // contains the response data from our usernam
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region POPULATE MOD GALLERY
+    const browser_gallery = document.getElementById("browser_gallery_view");
+    function ingest_mod_list(mods){
+
+        let arr = mods.publishedfiledetails;
+        for (let i = 0; i < arr.length; i++){
+
+            create_mod_tile(arr[i]);
+
+        }
+
+
+    }
+    function create_mod_tile(mod_instance){
+        // title, previewUrl
+
+        let mod_tile = document.createElement('div');
+        mod_tile.className = 'browser_item_tile';
+
+        let mod_preview = document.createElement('img');
+        mod_preview.src = mod_instance.previewUrl;
+        mod_preview.className = 'browser_item_preview';
+        mod_tile.appendChild(mod_preview);
+
+        let mod_title = document.createElement('span');
+        mod_title.innerText = mod_instance.title;
+        mod_tile.appendChild(mod_title);
+
+
+        browser_gallery.appendChild(mod_tile);
+
+    }
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 
 

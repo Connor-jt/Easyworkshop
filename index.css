@@ -17,7 +17,8 @@ body{
 
 
 .login_panel{
-    background-color: #161616;
+    background-color: #171926;
+    /* background-color: #161616; */
     border-radius: 7px;
     padding: 20px 40px 22px 40px;
 
@@ -64,6 +65,12 @@ body{
     border-bottom-width: 1px;
     border-style: solid;
 }  
+.login_field:hover{
+    background-color: #a0a0a02f;
+}
+.login_field:focus{
+    background-color: #a0a0a02f;
+}
 .login_submit{
     margin-top: 35px;
     background-color: #007acc;
@@ -166,4 +173,31 @@ body{
 @keyframes spin {
     from { transform:rotate(0deg); }
     to { transform:rotate(360deg); }
+}
+
+
+
+.browser{
+    padding: 20px;
+}
+.browser_header{
+    float:right;
+    margin-top: 40px;
+    height: 40px;
+}
+.browser_filter_panel{
+    float: left;
+    width: 300px;
+}
+.browser_gallery_panel{
+    float: right;
+}
+.browser_item_tile{
+    height: 200px;
+    width: 150px;
+    display: inline-block;
+}
+.browser_item_preview{
+    height: 130px;
+    width: 130px;
 }
