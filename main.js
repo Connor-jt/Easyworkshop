@@ -4,15 +4,42 @@ var WS = null; // our websocket handle to the steam servers
 var logon_session_header = null;
 var logon_session_details = null; // contains the response data from our username+password logon (steam ID etc)
 function disconnect(reason = null) {
-    if (reason != null) console.log("Connection closed: " + reason)
-    else                console.log("Connection closed.")
+    let log;
+    if (reason != null) log = "Connection closed: " + reason;
+    else                log = "Connection closed.";
+    console.log(log);
+    print(log);
+
     logon_session_header = null;
     logon_session_details = null; 
+    switch_page(LOGIN_PAGE);
+
     Heartbeat_Stop(); 
     if (WS!=null){
         if (WS.readyState !== WebSocket.CLOSED && WS.readyState !== WebSocket.CLOSED) WS.close();
         WS = null;
     } 
+}
+var ACTIVE_PAGE = 0;
+const LOGIN_PAGE = 0;
+const LOADING_PAGE = 1;
+const BROWSE_PAGE = 2;
+const DETAILS_PAGE = 3;
+const _LOGIN_PAGE = document.getElementById("login_view")
+const _LOADING_PAGE = document.getElementById("loading_view")
+const _BROWSE_PAGE = document.getElementById("browser_view")
+const _DETAILS_PAGE = document.getElementById("details_view")
+function switch_page(page_index){
+    console.log("switching to page: " + page_index)
+    ACTIVE_PAGE = page_index;
+    _LOGIN_PAGE.style.display   = "none";
+    //_LOADING_PAGE.style.display = "none";
+    //_BROWSE_PAGE.style.display  = "none";
+    //_DETAILS_PAGE.style.display = "none";
+    if (page_index == LOGIN_PAGE  ) _LOGIN_PAGE.style.display    = "block";
+    //if (page_index == LOADING_PAGE) _LOADING_PAGE.style.display  = "block";
+    //if (page_index == BROWSE_PAGE ) _BROWSE_PAGE.style.display   = "block";
+    //if (page_index == DETAILS_PAGE) _DETAILS_PAGE.style.display  = "block";
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -104,7 +131,7 @@ function disconnect(reason = null) {
         ClientHello_view.set(ClientHello_packet);
         WS.send(ClientHello_view)
     }
-    function Steam_SendLogon(){
+    function Steam_SendLogon(username, password){
         let header = {
             clientSessionid: 0,
             steamid: new Long(0x00000000, 0x01100001) // 0x0110000100000000
@@ -112,8 +139,8 @@ function disconnect(reason = null) {
         let logon = {
             obfuscatedPrivateIp: {v4: 0x45520FF2}, // 0xffffffff ^ 0xBAADF00D,
             deprecatedObfustucatedPrivateIp: 0x45520FF2,
-            accountName: STATIC_USERNAME,
-            password: STATIC_PASSWORD,
+            accountName: username,
+            password: password,
             shouldRememberPassword: false,
             protocolVersion: 0x0001002c,
             clientOsType: 0x00000010,
@@ -122,8 +149,8 @@ function disconnect(reason = null) {
             steam2TicketRequest: false,
             clientPackageVersion: 1771,
             supportsRateLimitResponse: true,
-            machineName: "DESKTOP-B2FH41Q (SteamKit2)",
-            //machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider ) // pretty sure we cant complete this via browser APIs (NOTE: 0x9b bytes is what we'd usually get from this)
+            machineName: "Easyworkshop - " + username,
+            //machine_id: HardwareUtils.GetMachineID( Client.Configuration.MachineInfoProvider ) // pretty sure we cant complete this via browser APIs (NOTE: 0x9b bytes is what we'd usually put in this)
         };
         let serialized = SerializePacket([0x8A,0x15,0x0,0x80], header, CMsgHeader_Message, logon, CMsgLogon_Message);
         WS.send(serialized);
@@ -236,13 +263,18 @@ function disconnect(reason = null) {
 
         } else if (message_type == 751){ // ClientLogOnResponse
             let response_obj = proto_deserialize(buffer.subarray(read_position), CMsgClientLogonResponse_Message);
-            logon_session_header = header_object;
-            logon_session_details = response_obj;
-            console.log(header_object);
-            console.log(response_obj);
+            if (response_obj.eresult == 1){
+                logon_session_header = header_object;
+                logon_session_details = response_obj;
+                console.log(header_object);
+                console.log(response_obj);
 
-            Heartbeat_Start(logon_session_details.legacyOutOfGameHeartbeatSeconds);
-            Steam_SendWorkshopQuery();
+                print("successfully logged in!", true);
+                Heartbeat_Start(logon_session_details.legacyOutOfGameHeartbeatSeconds);
+                Steam_SendWorkshopQuery();
+            } else {
+                disconnect("login failed with code: " + response_obj.eresult);
+            }
         } else if (message_type == 757){ // ClientLoggedOff 
             disconnect("Client was logged off");
         } else if (message_type == 5500){ // ClientServerUnavailable 
@@ -257,6 +289,7 @@ function disconnect(reason = null) {
             
             let response_obj = proto_deserialize(buffer.subarray(read_position), CPublishedFile_QueryFilesResponse_Message);
             console.log(response_obj);
+            print("recieved query response!!", true);
         }
 
         return;
@@ -280,16 +313,20 @@ function disconnect(reason = null) {
             clientSessionid: logon_session_header.clientSessionid,
             steamid: logon_session_header.steamid
         };
-        let serialized = SerializePacket([0xBF,0x2,0x0,0x80], header, CMsgHeader_Message);
-        WS.send(serialized);
-        console.log("heartbeat");
+        try{
+            let serialized = SerializePacket([0xBF,0x2,0x0,0x80], header, CMsgHeader_Message);
+            WS.send(serialized);
+            console.log("heartbeat");
+        } catch (ex){
+            console.log("heartbeat fail: " + ex);
+        }
     }
 
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region WEBSOCKET CONNECTION
-    function init_steam_connection(){
+    function init_steam_connection(username, password){
         if (CMsgHeader_Message == null) throw "protobuf hasn't init yet!!";
 
         let custom_input_server = "cmp1-vie1.steamserver.net:27018";
@@ -299,7 +336,7 @@ function disconnect(reason = null) {
         WS.onopen = () => {
             console.log('WS opened')
             Steam_SendHello();
-            Steam_SendLogon();
+            Steam_SendLogon(username, password);
         }
         WS.onmessage = (message) => {
             console.log("packet recieved!!")
@@ -350,16 +387,24 @@ function disconnect(reason = null) {
         login_field_changed();
     }
     function login_submit(){
-        print_error("feature not implemented!");
+        if (ACTIVE_PAGE != LOGIN_PAGE){
+            console.log("tried to log in when not on login page??");
+            return;
+        }
+
+        let username = username_field.value;
+        let password = password_field.value;
+        if (!username){ print("no username provided!"); return; }
+        if (!password){ print("no password provided!"); return; }
+
+        switch_page(LOADING_PAGE);
+        init_steam_connection(username, password);
     }
     function login_field_changed(){
         if (username_field.value && password_field.value)
             submit_field.removeAttribute("disabled");
         else
             submit_field.setAttribute("disabled", "disabled");
-    }
-    function login_valid_check(){
-
     }
     try_cached_credentials();
     
@@ -372,9 +417,10 @@ function disconnect(reason = null) {
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region ERROR DISPLAY
     const error_panel = document.getElementById("error_view");
-    function print_error(error_msg){
+    function print(error_msg, was_sucess = false){
         var error_div = document.createElement('div');
-        error_div.className = 'error_item';
+        if (was_sucess) error_div.className = 'error_item_success';
+        else            error_div.className = 'error_item';
         error_div.innerText = error_msg
         error_panel.appendChild(error_div);
 
