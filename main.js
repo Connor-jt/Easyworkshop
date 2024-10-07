@@ -469,6 +469,7 @@ var logon_session_details = null; // contains the response data from our usernam
 
         let mod_title = document.createElement('span');
         mod_title.innerText = mod_instance.title;
+        mod_title.className = 'browser_item_title';
         mod_tile.appendChild(mod_title);
 
 

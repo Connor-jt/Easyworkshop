@@ -193,11 +193,23 @@ body{
     float: right;
 }
 .browser_item_tile{
+    background-color: #171926;
+    border-radius: 6px;
+    margin: 10px;
     height: 200px;
     width: 150px;
     display: inline-block;
 }
 .browser_item_preview{
-    height: 130px;
-    width: 130px;
+    display: block;
+    height: 150px;
+    width: 150px;
+}
+.browser_item_title{
+    margin: 8px 5px;
+    display: block;
+    height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
