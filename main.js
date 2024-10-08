@@ -153,8 +153,10 @@ var logon_session_details = null; // contains the response data from our usernam
         let query = {
             appid: 105600, searchText: "gold",
             numperpage: 10,
-            returnPlaytimeStats:1, returnKvTags:true, returnVoteData:true, queryType:0, //return_reactions:true
-            returnDetails: true, returnPreviews: true, returnShortDescription:true, returnTags:true
+            returnPlaytimeStats:0xff, returnKvTags:true, returnVoteData:true, queryType:0, 
+            returnDetails: true, returnPreviews: true, returnTags:true, 
+            // returnShortDescription:true, // probably not useful?
+            // return_for_sale_data:true, return_metadata:true, return_short_description:true, return_reactions:true, // none of these do anything??
         };
         let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
         WS.send(serialized)
@@ -440,7 +442,6 @@ var logon_session_details = null; // contains the response data from our usernam
         error_panel.removeChild(error_div)
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
-
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region POPULATE MOD GALLERY
