@@ -43,6 +43,22 @@ var logon_session_details = null; // contains the response data from our usernam
         const buffer = await blob.arrayBuffer();
         return new Uint8Array(buffer);
     }
+    function short_string_number(num){
+        if (typeof num === 'undefined' || num === null) return "NULL"; 
+
+        if (num < 1000){ return Math.round(num).toString(); } 
+        else if (num < 1000000){ return Math.round(num/1000) + "K"; } 
+        else if (num < 1000000000){ return Math.round(num/1000000) + "M"; } 
+        else { return Math.round(num/1000000000) + "B"; } 
+    }
+    function short_string_number_bytes(){
+        if (typeof num === 'undefined' || num === null) return "NULL"; 
+
+        if (num < 1000){ return Math.round(num).toString(); } 
+        else if (num < 1000000){ return Math.round(num/1000) + "kb"; } 
+        else if (num < 1000000000){ return Math.round(num/1000000) + "mb"; } 
+        else { return Math.round(num/1000000000) + "gb"; } 
+    }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -153,9 +169,12 @@ var logon_session_details = null; // contains the response data from our usernam
         let query = {
             appid: 105600, searchText: "gold",
             numperpage: 10,
-            returnPlaytimeStats:0xff, returnKvTags:true, returnVoteData:true, queryType:0, 
-            returnDetails: true, returnPreviews: true, returnTags:true, 
-            // returnShortDescription:true, // probably not useful?
+            queryType:0, 
+            // NOTE: none of these flags seem to do anything???? except having at least 1 active, which forces us to recieve all the data or something
+            returnPreviews: true,
+            //returnDetails: true,
+            // returnTags:true, returnKvTags:true, returnVoteData:true, // not useful for our broad search??
+            // returnShortDescription:true, returnPlaytimeStats:1, // probably not useful?
             // return_for_sale_data:true, return_metadata:true, return_short_description:true, return_reactions:true, // none of these do anything??
         };
         let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
@@ -454,8 +473,6 @@ var logon_session_details = null; // contains the response data from our usernam
             create_mod_tile(arr[i]);
 
         }
-
-
     }
     function create_mod_tile(mod_instance){
         // title, previewUrl
@@ -463,16 +480,55 @@ var logon_session_details = null; // contains the response data from our usernam
         let mod_tile = document.createElement('div');
         mod_tile.className = 'browser_item_tile';
 
-        let mod_preview = document.createElement('img');
-        mod_preview.src = mod_instance.previewUrl;
-        mod_preview.className = 'browser_item_preview';
-        mod_tile.appendChild(mod_preview);
+            let mod_preview = document.createElement('img');
+            mod_preview.src = mod_instance.previewUrl;
+            mod_preview.className = 'browser_item_preview';
+            mod_tile.appendChild(mod_preview);
 
-        let mod_title = document.createElement('span');
-        mod_title.innerText = mod_instance.title;
-        mod_title.className = 'browser_item_title';
-        mod_tile.appendChild(mod_title);
+            let mod_title = document.createElement('span');
+            mod_title.innerText = mod_instance.title;
+            mod_title.className = 'browser_item_title';
+            mod_tile.appendChild(mod_title);
 
+            let mod_stats = document.createElement('div');
+            mod_stats.className = 'browser_item_stats_bar';
+
+                // downloads
+                let mod_dl_icon = document.createElement('img');
+                mod_dl_icon.src = "RES/icon_dl.png";
+                mod_dl_icon.className = 'browser_item_icon';
+                mod_stats.appendChild(mod_dl_icon);
+
+                let mod_dl_stat = document.createElement('span');
+                mod_dl_stat.innerText = short_string_number(mod_instance.lifetimeSubscriptions);
+                mod_dl_stat.className = 'browser_item_stat';
+                mod_stats.appendChild(mod_dl_stat);
+
+                // favorites
+                let mod_fav_icon = document.createElement('img');
+                mod_fav_icon.src = "RES/icon_fav.png";
+                mod_fav_icon.className = 'browser_item_icon';
+                mod_stats.appendChild(mod_fav_icon);
+
+                let mod_fav_stat = document.createElement('span');
+                mod_fav_stat.innerText = short_string_number(mod_instance.favorited);
+                mod_fav_stat.className = 'browser_item_stat';
+                mod_stats.appendChild(mod_fav_stat);
+
+                // size // not good??
+                // let mod_size_icon = document.createElement('img');
+                // mod_size_icon.src = "RES/icon_size.png";
+                // mod_size_icon.className = 'browser_item_icon';
+                // mod_stats.appendChild(mod_size_icon);
+
+                // let mod_size_stat = document.createElement('span');
+                // mod_size_stat.innerText = short_string_number_bytes(mod_instance.fileSize);
+                // mod_size_stat.className = 'browser_item_stat';
+                // mod_stats.appendChild(mod_size_stat);
+
+
+
+            mod_tile.appendChild(mod_stats);
 
         browser_gallery.appendChild(mod_tile);
 
