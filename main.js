@@ -26,7 +26,6 @@ var logon_session_details = null; // contains the response data from our usernam
 
 
 
-
 // STEAM API RELATED SECTIONS //
 
 
@@ -160,16 +159,17 @@ var logon_session_details = null; // contains the response data from our usernam
         WS.send(serialized);
         console.log("logon sent!!!");
     }
-    function Steam_SendWorkshopQuery(){
+    function Steam_SendWorkshopQuery(app_id, sort_by, page_index, search_text = null){ // returns jobid
         let jobid = MakeJobid();
         let header = {
             targetJobName: "PublishedFile.QueryFiles#1",
             jobidSource: jobid
         };
         let query = {
-            appid: 105600, searchText: "gold",
+            appid: app_id, 
             numperpage: 10,
-            queryType:0, 
+            page: page_index,
+            queryType: sort_by, 
             // NOTE: none of these flags seem to do anything???? except having at least 1 active, which forces us to recieve all the data or something
             returnPreviews: true,
             //returnDetails: true,
@@ -177,10 +177,14 @@ var logon_session_details = null; // contains the response data from our usernam
             // returnShortDescription:true, returnPlaytimeStats:1, // probably not useful?
             // return_for_sale_data:true, return_metadata:true, return_short_description:true, return_reactions:true, // none of these do anything??
         };
+        // add in our search filter if we have one
+        if (search_text != null) query.searchText = search_text;
+
         let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
-        WS.send(serialized)
+        WS.send(serialized);
     
         console.log("query sent!!!");
+        return jobid;
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
@@ -280,7 +284,6 @@ var logon_session_details = null; // contains the response data from our usernam
                 switch_page(BROWSE_PAGE);
                 print("successfully logged in!", true);
                 Heartbeat_Start(logon_session_details.legacyOutOfGameHeartbeatSeconds);
-                Steam_SendWorkshopQuery();
             } else {
                 disconnect("login failed with code: " + response_obj.eresult);
             }
@@ -535,6 +538,43 @@ var logon_session_details = null; // contains the response data from our usernam
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region SEARCH FILTERS 
+    const sort_field = document.getElementById("sort_select");
+    const search_field = document.getElementById("search_field");
+    var curr_sort_type = 0;
+    var curr_filter_string = null;
+    var curr_page_index = 1
+    function search_run(){
+        if (ACTIVE_PAGE != BROWSE_PAGE){ print("cant make searches while not browsing!! what the hell??"); return; }
+
+        // get sorting type
+        curr_sort_type = 0;
+        if      (sort_field.value == "most_popular"   ){ curr_sort_type = 0;  } // k_EUGCQuery_RankedByVote                 	0	Sort by vote popularity all-time
+        else if (sort_field.value == "most_subscribed"){ curr_sort_type = 12; } // k_EUGCQuery_RankedByTotalUniqueSubscriptions	12	Sort by lifetime total unique # of subscribers descending
+        else if (sort_field.value == "most_recent"    ){ curr_sort_type = 1;  } // k_EUGCQuery_RankedByPublicationDate      	1	Sort by publication date descending
+        else if (sort_field.value == "last_updated"   ){ curr_sort_type = 19; } // k_EUGCQuery_RankedByLastUpdatedDate      	19	Sort by last updated time.
+        else if (sort_field.value == "relevance"      ){ curr_sort_type = 11; } // k_EUGCQuery_RankedByTextSearch           	11	Sort by keyword text search relevancy
+        else { print("invalid sort by selection!!!"); return; }
+        console.log(sort_field.value);
+
+        // get search string    
+        curr_filter_string = null;
+        if (search_field.value)
+            curr_filter_string = search_field.value;
+
+        // get page index
+        curr_page_index = 1;
+
+        // clear UI before callijng
+        browser_gallery.replaceChildren();
+
+        Steam_SendWorkshopQuery(105600, curr_page_index, curr_sort_type, curr_filter_string);
+    }
+    
+//#endregion -----------------------------------------------------------------------------------------------------------------
+
+
 
 
 
@@ -542,6 +582,7 @@ var logon_session_details = null; // contains the response data from our usernam
 // #region FUNCTION EXPORTS
 window.login_submit=login_submit;
 window.login_field_changed=login_field_changed;
+window.search_run=search_run;
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 

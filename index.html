@@ -33,13 +33,16 @@
                 <label for="search_field">Search</label>
                 <input type="text" id="search_field" style="margin-right: 20px;" placeholder="filter.." />
                 
-                <label for="sort-select">Sort by</label>
-                <select name="sort" id="sort-select">
-                    <option value="popular">Popular</option>
-                    <option value="latest">Latest</option>
+                <label for="sort_select">Sort by</label>
+                <select name="sort" id="sort_select">
+                    <option value="most_popular">Most Popular</option>
+                    <option value="most_subscribed">Most Subscribed</option>
+                    <option value="most_recent">Most Recent</option>
+                    <option value="last_updated">Last Updated</option>
+                    <option value="relevance">Relevance</option>
                 </select>
 
-
+                <button onclick="search_run();">run search</button>
             </div>
             <div id="browser_content">
                 <div class="browser_filter_panel"></div>
