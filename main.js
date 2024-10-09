@@ -28,6 +28,18 @@ var logon_session_details = null; // contains the response data from our usernam
 
 // STEAM API RELATED SECTIONS //
 
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region STEAM TIME FUNCTIONS
+    function steam_time_now(){
+        return date_to_steam_date(new Date());
+    }
+    function date_to_steam_date(date){
+        return Math.floor((date.getTime() - steam_zero_date()) / 1000);
+    }
+    function steam_zero_date(){
+        return new Date(2005, 1, 1, 0, 0, 0, 0).getTime();
+    }
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region UTILITY FUNCTIONS
@@ -88,8 +100,7 @@ var logon_session_details = null; // contains the response data from our usernam
     function MakeJobid(){
         job_index += 1;
         // 20 bits, job index, 30 bits, timestamp (seconds since 2005), 4 bits, processid, 10 bits, boxid
-        let seconds = Math.floor((new Date().getTime() - new Date(2005, 1, 1, 0, 0, 0, 0).getTime()) / 1000);
-        let packed_seconds = (seconds & 0x3FFFFFFF) << 20;
+        let packed_seconds = (steam_time_now() & 0x3FFFFFFF) << 20;
         return (packed_seconds | (job_index & 0xfffff));
     }
     function SerializePacket(msg_sig, header, headerproto, body = undefined, bodyproto = undefined){
@@ -170,6 +181,7 @@ var logon_session_details = null; // contains the response data from our usernam
             numperpage: 10,
             page: page_index,
             queryType: sort_by, 
+            //dateRangeCreated: {timestampStart: date_to_steam_date(new Date()), timestampEnd: steam_time_now()},
             // NOTE: none of these flags seem to do anything???? except having at least 1 active, which forces us to recieve all the data or something
             returnPreviews: true,
             //returnDetails: true,
@@ -177,13 +189,13 @@ var logon_session_details = null; // contains the response data from our usernam
             // returnShortDescription:true, returnPlaytimeStats:1, // probably not useful?
             // return_for_sale_data:true, return_metadata:true, return_short_description:true, return_reactions:true, // none of these do anything??
         };
+        console.log(query);
         // add in our search filter if we have one
         if (search_text != null) query.searchText = search_text;
 
         let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
         WS.send(serialized);
     
-        console.log("query sent!!!");
         return jobid;
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
@@ -569,7 +581,7 @@ var logon_session_details = null; // contains the response data from our usernam
         // clear UI before callijng
         browser_gallery.replaceChildren();
 
-        Steam_SendWorkshopQuery(105600, curr_page_index, curr_sort_type, curr_filter_string);
+        Steam_SendWorkshopQuery(105600, curr_sort_type, curr_page_index, curr_filter_string);
     }
     
 //#endregion -----------------------------------------------------------------------------------------------------------------
@@ -585,6 +597,10 @@ window.login_field_changed=login_field_changed;
 window.search_run=search_run;
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region placeholder
+
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 
 
