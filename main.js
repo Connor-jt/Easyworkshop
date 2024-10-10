@@ -39,6 +39,9 @@ var logon_session_details = null; // contains the response data from our usernam
     function steam_zero_date(){
         return new Date(2005, 1, 1, 0, 0, 0, 0).getTime();
     }
+    function steam_date_to_date(steam_date){
+        return new Date((steam_zero_date() + steam_date) * 1000);
+    }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -184,8 +187,9 @@ var logon_session_details = null; // contains the response data from our usernam
             //dateRangeCreated: {timestampStart: date_to_steam_date(new Date()), timestampEnd: steam_time_now()},
             // NOTE: none of these flags seem to do anything???? except having at least 1 active, which forces us to recieve all the data or something
             returnPreviews: true,
+            returnVoteData:true, // this one does seem to impact the vote data that we recieve at least
             //returnDetails: true,
-            // returnTags:true, returnKvTags:true, returnVoteData:true, // not useful for our broad search??
+            // returnTags:true, returnKvTags:true, , // not useful for our broad search??
             // returnShortDescription:true, returnPlaytimeStats:1, // probably not useful?
             // return_for_sale_data:true, return_metadata:true, return_short_description:true, return_reactions:true, // none of these do anything??
         };
@@ -452,11 +456,11 @@ var logon_session_details = null; // contains the response data from our usernam
         _LOGIN_PAGE.style.display   = "none";
         _LOADING_PAGE.style.display = "none";
         _BROWSE_PAGE.style.display  = "none";
-        //_DETAILS_PAGE.style.display = "none";
+        _DETAILS_PAGE.style.display = "none";
         if (page_index == LOGIN_PAGE  ) _LOGIN_PAGE.style.display    = "block";
         if (page_index == LOADING_PAGE) _LOADING_PAGE.style.display  = "block";
         if (page_index == BROWSE_PAGE ) _BROWSE_PAGE.style.display   = "block";
-        //if (page_index == DETAILS_PAGE) _DETAILS_PAGE.style.display  = "block";
+        if (page_index == DETAILS_PAGE) _DETAILS_PAGE.style.display  = "block";
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
@@ -480,20 +484,34 @@ var logon_session_details = null; // contains the response data from our usernam
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region POPULATE MOD GALLERY
     const browser_gallery = document.getElementById("browser_gallery_view");
+    var loaded_gallery_tiles = {};
     function ingest_mod_list(mods){
 
         let arr = mods.publishedfiledetails;
         for (let i = 0; i < arr.length; i++){
-
-            create_mod_tile(arr[i]);
+            let curr_mod = arr[i]
+            create_mod_tile(curr_mod);
 
         }
     }
     function create_mod_tile(mod_instance){
         // title, previewUrl
 
+
         let mod_tile = document.createElement('div');
         mod_tile.className = 'browser_item_tile';
+
+        // store a reference of the mod so we can find it later
+        let mod_id_uint32 = mod_instance.publishedfileid.toString(); // (mod_instance.publishedfileid.low >>> 0) ^ (mod_instance.publishedfileid.high >>> 0);
+        loaded_gallery_tiles[mod_id_uint32] = mod_instance;
+        // let the mod tile be clicked???
+        mod_tile.setAttribute('mod-id', mod_id_uint32);
+        mod_tile.onclick = function(event) {
+            console.log(this);
+            let test = this.getAttribute('mod-id');
+            console.log("doody_mode " + test);
+            select_tile(Number(test));
+        }
 
             let mod_preview = document.createElement('img');
             mod_preview.src = mod_instance.previewUrl;
@@ -580,12 +598,83 @@ var logon_session_details = null; // contains the response data from our usernam
 
         // clear UI before callijng
         browser_gallery.replaceChildren();
+        loaded_gallery_tiles = {}; // clear thingos
 
         Steam_SendWorkshopQuery(105600, curr_sort_type, curr_page_index, curr_filter_string);
     }
     
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region LOADING DETAILS PAGE
+    function select_tile(mod_id){
+        load_details(loaded_gallery_tiles[mod_id]);
+    }
+    const details_active_image = document.getElementById("details_active_image")
+    const details_gallery = document.getElementById("details_gallery")
+    const details_description = document.getElementById("details_description")
+    const details_side_panel = document.getElementById("details_side_panel")
+    function load_details(mod){
+        if (ACTIVE_PAGE != BROWSE_PAGE){ console.log("cant access details page unless on browse page??");return; }
+        switch_page(DETAILS_PAGE);
+
+        // activate image
+        details_active_image.src = mod.previewUrl
+
+
+        // load all extra images
+        details_gallery.replaceChildren();
+        for (let i = 0; i < mod.previews.length; i++){
+            let curr_preview = mod.previews[i];
+
+            if (curr_preview.previewType == 0){ // image
+                let preview_img = document.createElement('img');
+                preview_img.src = curr_preview.url;
+                preview_img.className = 'details_mini_image';
+                details_gallery.appendChild(preview_img);
+            } else if (curr_preview.previewType == 1){ // youtube video
+                let preview_img = document.createElement('img');
+                preview_img.src = "RES/icon_dl.png";
+                preview_img.className = 'details_mini_image';
+                details_gallery.appendChild(preview_img);
+            }
+        }
+
+        // load description
+        details_description.innerText = mod.shortDescription;
+
+        // load all extra junk data
+        let detail_text = mod.title + "\r\n";
+
+        detail_text += "favorites: " + mod.favorited + "\r\n";
+        detail_text += "lifetime favorites: " + mod.lifetimeFavorited + "\r\n";
+        detail_text += "subscriptions: " + mod.subscriptions + "\r\n";
+        detail_text += "lifetime subscriptions: " + mod.lifetimeSubscriptions + "\r\n";
+        detail_text += "views: " + mod.views + "\r\n";
+        detail_text += "\r\n";
+        detail_text += "file size: " + mod.fileSize + "\r\n";
+        detail_text += "comments: " + mod.numCommentsPublic + "\r\n";
+        detail_text += "\r\n";
+        detail_text += "revision: " + mod.revisionChangeNumber.toString() + "\r\n";
+        detail_text += "time created: " + steam_date_to_date(mod.timeCreated).toDateString() + "\r\n";
+        detail_text += "time updated: " + steam_date_to_date(mod.timeUpdated).toDateString() + "\r\n";
+        detail_text += "\r\n";
+        detail_text += "upvotes: " + mod.voteData.votesUp + "\r\n";
+        detail_text += "downvotes: " + mod.voteData.votesDown + "\r\n";
+        detail_text += "\r\n";
+        detail_text += "tags:\r\n";
+        for (let i = 0; i < mod.tags.length; i++){
+            let curr_tag = mod.tags[i];
+            detail_text += "- " + curr_tag.displayName + "(" + curr_tag.tag + ")" + "\r\n";
+        }
+
+        details_side_panel.innerText = detail_text;
+    }
+    function close_details(){
+        if (ACTIVE_PAGE != DETAILS_PAGE){ console.log("cant back out of details if not on details??");return; }
+        switch_page(BROWSE_PAGE);
+    }
+//#endregion -----------------------------------------------------------------------------------------------------------------
 
 
 
@@ -595,6 +684,7 @@ var logon_session_details = null; // contains the response data from our usernam
 window.login_submit=login_submit;
 window.login_field_changed=login_field_changed;
 window.search_run=search_run;
+window.close_details=close_details;
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------

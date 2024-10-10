@@ -201,6 +201,12 @@ body{
     display: inline-block;
     overflow: hidden;
 }
+.browser_item_tile:hover{
+    background-color: #30344f;
+}
+.browser_item_tile:active{
+    background-color: #6b74ae;
+}
 .browser_item_preview{
     display: block;
     height: 150px;
@@ -231,3 +237,41 @@ body{
     display: inline-block;
 }
 
+
+
+
+
+.details_view{
+    display: flex;
+    top: 0px;
+    bottom: 0px;
+    left: 50px;
+    right: 50px;
+}
+.details_content_panel{
+    flex: 1;
+}
+.details_side_panel{
+    flex: 300px;
+    flex-grow: 0;
+    width: 300px;
+    margin-left: 30px;
+}
+.details_active_image{
+    background-color: black;
+    object-fit: contain;
+    width: 100%;
+    aspect-ratio: 2;
+}
+.details_mini_image{
+    object-fit: cover;
+    width: 128px;
+    height: 64px;
+}
+.details_exit_button{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+}
