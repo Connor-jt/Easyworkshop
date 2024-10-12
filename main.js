@@ -614,34 +614,37 @@ var logon_session_details = null; // contains the response data from our usernam
     const details_gallery = document.getElementById("details_gallery")
     const details_description = document.getElementById("details_description")
     const details_side_panel = document.getElementById("details_side_panel")
+    function create_mini(url){
+        let preview_img = document.createElement('img');
+        preview_img.src = url;
+        preview_img.className = 'details_mini_image';
+        preview_img.onclick = function(event){
+            details_active_image.src = this.src;
+        }
+        details_gallery.appendChild(preview_img);
+    }
     function load_details(mod){
         if (ACTIVE_PAGE != BROWSE_PAGE){ console.log("cant access details page unless on browse page??");return; }
         switch_page(DETAILS_PAGE);
+        details_gallery.replaceChildren();
 
         // activate image
         details_active_image.src = mod.previewUrl
 
-
         // load all extra images
-        details_gallery.replaceChildren();
+        create_mini(mod.previewUrl);
         for (let i = 0; i < mod.previews.length; i++){
             let curr_preview = mod.previews[i];
-
             if (curr_preview.previewType == 0){ // image
-                let preview_img = document.createElement('img');
-                preview_img.src = curr_preview.url;
-                preview_img.className = 'details_mini_image';
-                details_gallery.appendChild(preview_img);
+                create_mini(curr_preview.url)
             } else if (curr_preview.previewType == 1){ // youtube video
-                let preview_img = document.createElement('img');
-                preview_img.src = "RES/icon_dl.png";
-                preview_img.className = 'details_mini_image';
-                details_gallery.appendChild(preview_img);
+                create_mini("RES/icon_dl.png")
             }
         }
 
         // load description
-        details_description.innerText = mod.shortDescription;
+        
+        details_description.innerText = mod.fileDescription;
 
         // load all extra junk data
         let detail_text = mod.title + "\r\n";
