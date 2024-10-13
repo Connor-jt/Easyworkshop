@@ -73,6 +73,31 @@ var logon_session_details = null; // contains the response data from our usernam
         else if (num < 1000000000){ return Math.round(num/1000000) + "mb"; } 
         else { return Math.round(num/1000000000) + "gb"; } 
     }
+    // annoying time functions
+    function getMonday(d) {
+        d = new Date(d);
+        var day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+        return new Date(d.setDate(diff));
+    }
+    function getMonthday(d){
+        return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+    function getYearday(d){
+        return new Date(d.getFullYear(), 0, 1);
+    }
+    function formatDate(date) {
+        const day = date.toLocaleString('default', { day: '2-digit' });
+        const month = date.toLocaleString('default', { month: 'short' });
+        const year = date.toLocaleString('default', { year: 'numeric' });
+        return day + '-' + month + '-' + year;
+    }
+    // more annoying time functions
+    function toUnixTimestamp(date){
+        return Math.floor(date.getTime() / 1000)
+    }
+    function fromUnixTimestamp(unix_timestamp){
+        return new Date(unix_timestamp * 1000);
+    }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -103,8 +128,12 @@ var logon_session_details = null; // contains the response data from our usernam
     function MakeJobid(){
         job_index += 1;
         // 20 bits, job index, 30 bits, timestamp (seconds since 2005), 4 bits, processid, 10 bits, boxid
-        let packed_seconds = (steam_time_now() & 0x3FFFFFFF) << 20;
-        return (packed_seconds | (job_index & 0xfffff));
+        //let packed_seconds = (steam_time_now() & 0x3FFFFFFF) << 20;
+        let packed_seconds = (steam_time_now() & 0x3FFFFFFF) * 0x100000; // this doesn't truncate it to like 32bits
+        
+        console.log("packed seconds");
+        console.log(packed_seconds);
+        return (packed_seconds + (job_index & 0xfffff));
     }
     function SerializePacket(msg_sig, header, headerproto, body = undefined, bodyproto = undefined){
         let header_bytes = proto_serialize(header, headerproto);
@@ -175,6 +204,7 @@ var logon_session_details = null; // contains the response data from our usernam
     }
     function Steam_SendWorkshopQuery(app_id, sort_by, page_index, search_text = null){ // returns jobid
         let jobid = MakeJobid();
+        console.log(jobid);
         let header = {
             targetJobName: "PublishedFile.QueryFiles#1",
             jobidSource: jobid
@@ -196,10 +226,18 @@ var logon_session_details = null; // contains the response data from our usernam
         console.log(query);
         // add in our search filter if we have one
         if (search_text != null) query.searchText = search_text;
+        // add our day filter if we have one
+        if (filter_date_type != NO_DATE && filter_start_date != null){
+            let last_date = new Date(filter_start_date); 
+            if      (filter_date_type == YEAR ){ last_date.setFullYear( last_date.getFullYear() + 1 ); } 
+            else if (filter_date_type == MONTH){ last_date.setMonth(    last_date.getMonth()    + 1 ); } 
+            else if (filter_date_type == WEEK ){ last_date.setDate(     last_date.getDate()     + 7 ); } 
+            else if (filter_date_type == DAY  ){ last_date.setDate(     last_date.getDate()     + 1 ); } 
+            query.dateRangeCreated = {timestampStart: toUnixTimestamp(filter_start_date), timestampEnd: toUnixTimestamp(last_date)};
+        }  
 
         let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
         WS.send(serialized);
-    
         return jobid.toString();
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
@@ -319,8 +357,13 @@ var logon_session_details = null; // contains the response data from our usernam
                 let response_obj = proto_deserialize(buffer.subarray(read_position), CPublishedFile_QueryFilesResponse_Message);
                 console.log(header_object);
                 console.log(response_obj);
-                ingest_mod_list(response_obj, header_object.jobidTarget.toString());
-                print("recieved query response!!", true);
+                if (response_obj.total > 0){
+                    console.log(header_object.jobidTarget);
+                    ingest_mod_list(response_obj, header_object.jobidTarget.toString());
+                    print("recieved query response!!", true);
+                } else {
+                    print("recieved query response with no erntries", false);
+                }
             }
         }
 
@@ -490,6 +533,8 @@ var logon_session_details = null; // contains the response data from our usernam
     const results_display = document.getElementById("results_display");
     var loaded_gallery_tiles = {};
     function ingest_mod_list(mods, jobid){
+        console.log(jobid);
+        console.log(active_query_id);
         if (jobid != active_query_id) {print("recieved mod query response with wrong jobid!!"); return;}
 
         // remove placeholder query object
@@ -498,7 +543,7 @@ var logon_session_details = null; // contains the response data from our usernam
             active_query_placeholder = null;
         }
 
-        results_display.innerText = "" + (curr_page_index*MODS_PER_PAGE) + "/" + mods.total + " results";
+        results_display.innerText = "" + (curr_page_index*MODS_PER_PAGE) + "/" + short_string_number(mods.total) + " results";
         let arr = mods.publishedfiledetails;
         for (let i = 0; i < arr.length; i++){
             let curr_mod = arr[i]
@@ -591,6 +636,7 @@ var logon_session_details = null; // contains the response data from our usernam
 // #region SEARCH FILTERS + auto loading next pages via scrolling
     const sort_field = document.getElementById("sort_select");
     const search_field = document.getElementById("search_field");
+    const date_filter_display = document.getElementById("date_filter_display");
     var curr_sort_type = 0;
     var curr_filter_string = null;
     var curr_page_index = 1
@@ -624,12 +670,102 @@ var logon_session_details = null; // contains the response data from our usernam
         browser_gallery.replaceChildren();
         loaded_gallery_tiles = {}; // clear thingos
 
+        // print out the date being filtered
+        //if (filter_start_date != null){
+            if (filter_date_type == NO_DATE){
+                date_filter_display.innerText = "[All time]";
+            } else if (filter_date_type == YEAR){
+                date_filter_display.innerText = "[Year] " + formatDate(filter_start_date);
+            } else if (filter_date_type == MONTH){
+                date_filter_display.innerText = "[Month] " + formatDate(filter_start_date);
+            } else if (filter_date_type == WEEK){
+                date_filter_display.innerText = "[Week] " + formatDate(filter_start_date);
+            } else if (filter_date_type == DAY){
+                date_filter_display.innerText = "[Day] " + formatDate(filter_start_date);
+            } 
+        //}
+
         // store query to list so we can match up the data later
         active_query_id = Steam_SendWorkshopQuery(105600, curr_sort_type, curr_page_index, curr_filter_string);
         active_query_placeholder = create_placeholder_tile();
     }
     
 //#endregion -----------------------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region DATE FILTERING
+    const NO_DATE = 0;
+    const YEAR = 1;
+    const MONTH = 2; 
+    const WEEK = 3;
+    const DAY = 4;
+    var filter_date_type = NO_DATE;
+    var filter_start_date = null;
+
+    const year_button = document.getElementById("year_button");
+    const month_button = document.getElementById("month_button");
+    const week_button = document.getElementById("week_button");
+    const day_button = document.getElementById("day_button");
+    function date_filter_prelude(SORT_TYPE, dir){
+        clear_selected_date_filter();
+        if (dir == 0 && filter_date_type == SORT_TYPE){ disable_date_filter(); return false; }
+        if (filter_start_date == null) filter_start_date = new Date();
+        filter_start_date.setHours(0, 0, 0, 0);
+        filter_date_type = SORT_TYPE;
+        return true;
+    }
+    function sort_year(dir){
+        if (!date_filter_prelude(YEAR, dir)) return;
+        year_button.classList.add('browser_date_sort_toggled');
+        // round to nearest year
+        filter_start_date = getYearday(filter_start_date);
+        // alter date as specified
+        if (dir!=0) filter_start_date.setFullYear( filter_start_date.getFullYear() + dir );
+        search_run();
+    }
+    function sort_mnth(dir){
+        if (!date_filter_prelude(MONTH, dir)) return;
+        month_button.classList.add('browser_date_sort_toggled');
+        // round to nearest month
+        filter_start_date = getMonthday(filter_start_date);
+        // alter date as specified
+        if (dir!=0) filter_start_date.setMonth( filter_start_date.getMonth() + dir );
+        search_run();
+    }
+    function sort_week(dir){
+        if (!date_filter_prelude(WEEK, dir)) return;
+        week_button.classList.add('browser_date_sort_toggled');
+        // round to hearest week
+        filter_start_date = getMonday(filter_start_date);
+        // alter date as specified
+        if (dir!=0) filter_start_date.setDate( filter_start_date.getDate() + (dir*7) );
+        search_run();
+
+    }
+    function sort_dayy(dir){
+        if (!date_filter_prelude(DAY, dir)) return;
+        day_button.classList.add('browser_date_sort_toggled');
+        // no date rounding needed
+        // alter date as specified
+        console.log(filter_start_date);
+        if (dir!=0) filter_start_date.setDate( filter_start_date.getDate() + dir );
+        search_run();
+    }
+    function clear_selected_date_filter(){
+        year_button.classList.remove('browser_date_sort_toggled');
+        month_button.classList.remove('browser_date_sort_toggled');
+        week_button.classList.remove('browser_date_sort_toggled');
+        day_button.classList.remove('browser_date_sort_toggled');
+    }
+    function disable_date_filter(){
+        filter_date_type = NO_DATE;
+        filter_start_date = null;
+        search_run();
+    }
+
+//#endregion -----------------------------------------------------------------------------------------------------------------
+
+
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region LOADING DETAILS PAGE
@@ -659,12 +795,14 @@ var logon_session_details = null; // contains the response data from our usernam
 
         // load all extra images
         create_mini(mod.previewUrl);
-        for (let i = 0; i < mod.previews.length; i++){
-            let curr_preview = mod.previews[i];
-            if (curr_preview.previewType == 0){ // image
-                create_mini(curr_preview.url)
-            } else if (curr_preview.previewType == 1){ // youtube video
-                create_mini("RES/icon_dl.png")
+        if (typeof mod.previews !== 'undefined'){
+            for (let i = 0; i < mod.previews.length; i++){
+                let curr_preview = mod.previews[i];
+                if (curr_preview.previewType == 0){ // image
+                    create_mini(curr_preview.url)
+                } else if (curr_preview.previewType == 1){ // youtube video
+                    create_mini("RES/icon_dl.png")
+                }
             }
         }
 
@@ -685,16 +823,18 @@ var logon_session_details = null; // contains the response data from our usernam
         detail_text += "comments: " + mod.numCommentsPublic + "\r\n";
         detail_text += "\r\n";
         detail_text += "revision: " + mod.revisionChangeNumber.toString() + "\r\n";
-        detail_text += "time created: " + steam_date_to_date(mod.timeCreated).toDateString() + "\r\n";
-        detail_text += "time updated: " + steam_date_to_date(mod.timeUpdated).toDateString() + "\r\n";
+        detail_text += "time created: " + fromUnixTimestamp(mod.timeCreated).toDateString() + "\r\n";
+        detail_text += "time updated: " + fromUnixTimestamp(mod.timeUpdated).toDateString() + "\r\n";
         detail_text += "\r\n";
         detail_text += "upvotes: " + mod.voteData.votesUp + "\r\n";
         detail_text += "downvotes: " + mod.voteData.votesDown + "\r\n";
         detail_text += "\r\n";
         detail_text += "tags:\r\n";
-        for (let i = 0; i < mod.tags.length; i++){
-            let curr_tag = mod.tags[i];
-            detail_text += "- " + curr_tag.displayName + "(" + curr_tag.tag + ")" + "\r\n";
+        if (typeof mod.tags !== 'undefined'){
+            for (let i = 0; i < mod.tags.length; i++){
+                let curr_tag = mod.tags[i];
+                detail_text += "- " + curr_tag.displayName + "(" + curr_tag.tag + ")" + "\r\n";
+            }
         }
 
         details_side_panel.innerText = detail_text;
@@ -714,6 +854,11 @@ window.login_submit=login_submit;
 window.login_field_changed=login_field_changed;
 window.search_run=search_run;
 window.close_details=close_details;
+
+window.sort_year=sort_year;
+window.sort_week=sort_week;
+window.sort_mnth=sort_mnth;
+window.sort_dayy=sort_dayy;
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------

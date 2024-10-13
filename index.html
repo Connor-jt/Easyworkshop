@@ -28,6 +28,20 @@
         </div>
         <div id="browser_view" class="fullscreen_panel browser" style="display: none;">
             <div class="browser_header">
+                <span id="date_filter_display">[All time]</span>
+                <span onclick="sort_year(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                <span onclick="sort_year( 0);" class="browser_date_sort" id="year_button">Year</span>
+                <span onclick="sort_year( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                <span onclick="sort_mnth(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                <span onclick="sort_mnth( 0);" class="browser_date_sort" id="month_button">Month</span>
+                <span onclick="sort_mnth( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                <span onclick="sort_week(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                <span onclick="sort_week( 0);" class="browser_date_sort" id="week_button">Week</span>
+                <span onclick="sort_week( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                <span onclick="sort_dayy(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                <span onclick="sort_dayy( 0);" class="browser_date_sort" id="day_button">Day</span>
+                <span onclick="sort_dayy( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                
                 <span id="results_display" style="margin-right: 20px;">0 results</span>
 
                 <label for="search_field">Search</label>

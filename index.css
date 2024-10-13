@@ -189,6 +189,29 @@ body{
     float: left;
     width: 300px;
 }
+.browser_date_sort{
+    background-color: transparent;
+    display: inline-block;
+}
+.browser_date_sort:hover{
+    background-color: #60606080;
+}
+.browser_date_sort:active{
+    background-color: #b0b0b080;
+}
+.browser_date_sort_toggled{
+    color: orange;
+}
+.browser_date_skip{
+    color: #3366cc;
+}
+.browser_date_space{
+    margin-right: 10px;
+}
+
+
+
+
 .browser_gallery_panel{
     float: right;
 }
