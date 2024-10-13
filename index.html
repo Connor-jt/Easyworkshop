@@ -28,65 +28,69 @@
             </div>
         </div>
         <div id="browser_view" class="fullscreen_panel browser" style="display: none;">
-            <div class="browser_header">
-                <span id="date_filter_display">[All time]</span>
-                <span onclick="sort_year(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
-                <span onclick="sort_year( 0);" class="browser_date_sort" id="year_button">Year</span>
-                <span onclick="sort_year( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
-                <span onclick="sort_mnth(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
-                <span onclick="sort_mnth( 0);" class="browser_date_sort" id="month_button">Month</span>
-                <span onclick="sort_mnth( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
-                <span onclick="sort_week(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
-                <span onclick="sort_week( 0);" class="browser_date_sort" id="week_button">Week</span>
-                <span onclick="sort_week( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
-                <span onclick="sort_dayy(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
-                <span onclick="sort_dayy( 0);" class="browser_date_sort" id="day_button">Day</span>
-                <span onclick="sort_dayy( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
-                
-                <span id="results_display" style="margin-right: 20px;">0 results</span>
+            <div class="scroller">
+                <div class="browser_header">
+                    <span id="date_filter_display">[All time]</span>
+                    <span onclick="sort_year(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                    <span onclick="sort_year( 0);" class="browser_date_sort" id="year_button">Year</span>
+                    <span onclick="sort_year( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                    <span onclick="sort_mnth(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                    <span onclick="sort_mnth( 0);" class="browser_date_sort" id="month_button">Month</span>
+                    <span onclick="sort_mnth( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                    <span onclick="sort_week(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                    <span onclick="sort_week( 0);" class="browser_date_sort" id="week_button">Week</span>
+                    <span onclick="sort_week( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                    <span onclick="sort_dayy(-1);" class="browser_date_sort browser_date_skip">&lt;&lt;</span>
+                    <span onclick="sort_dayy( 0);" class="browser_date_sort" id="day_button">Day</span>
+                    <span onclick="sort_dayy( 1);" class="browser_date_sort browser_date_skip browser_date_space">&gt;&gt;</span>
+                    
+                    <span id="results_display" style="margin-right: 20px;">0 results</span>
 
-                <label for="search_field">Search</label>
-                <input type="text" id="search_field" style="margin-right: 20px;" placeholder="filter.." />
-                
-                <label for="sort_select">Sort by</label>
-                <select name="sort" id="sort_select">
-                    <option value="most_popular">Most Popular</option>
-                    <option value="most_subscribed">Most Subscribed</option>
-                    <option value="most_recent">Most Recent</option>
-                    <option value="last_updated">Last Updated</option>
-                    <option value="relevance">Relevance</option>
-                </select>
+                    <label for="search_field">Search</label>
+                    <input type="text" id="search_field" style="margin-right: 20px;" placeholder="filter.." />
+                    
+                    <label for="sort_select">Sort by</label>
+                    <select name="sort" id="sort_select">
+                        <option value="most_popular">Most Popular</option>
+                        <option value="most_subscribed">Most Subscribed</option>
+                        <option value="most_recent">Most Recent</option>
+                        <option value="last_updated">Last Updated</option>
+                        <option value="relevance">Relevance</option>
+                    </select>
 
-                <button onclick="search_run();">run search</button>
-            </div>
-            <div id="browser_content">
-                <div class="browser_filter_panel"></div>
-                <div class="browser_gallery_panel" id="browser_gallery_view">
+                    <button onclick="search_run();">run search</button>
+                </div>
+                <div id="browser_content">
+                    <div class="browser_filter_panel"></div>
+                    <div class="browser_gallery_panel" id="browser_gallery_view">
 
+                    </div>
                 </div>
             </div>
         </div>
         <div id="details_view" class="fullscreen_panel" style="display: none;" >
-            <div class="details_view">
-                <div class="details_content_panel">
-                    <img id="details_active_image" class="details_active_image" src="RES/logo_cutout_animated.png"/>
-                    <div id="details_gallery">
-                        <img class="details_mini_image" src="RES/icon_dl.png"/>
-                        <img class="details_mini_image" src="RES/icon_fav.png"/>
-                        <img class="details_mini_image" src="RES/logo_cutout.png"/>
-                        <img class="details_mini_image" src="RES/logo_opaque.png"/>
+            <div class="scroller">
+                <div class="details_view">
+                    <div class="details_content_panel">
+                        <img id="details_active_image" class="details_active_image" src="RES/logo_cutout_animated.png"/>
+                        <div id="details_gallery">
+                            <img class="details_mini_image" src="RES/icon_dl.png"/>
+                            <img class="details_mini_image" src="RES/icon_fav.png"/>
+                            <img class="details_mini_image" src="RES/logo_cutout.png"/>
+                            <img class="details_mini_image" src="RES/logo_opaque.png"/>
+                        </div>
+                        <div id="details_description">
+                            Epic sample mod description!!!\r\nSample my epic mod!! description mode activate!@!!@!@!
+                        </div>
                     </div>
-                    <div id="details_description">
-                        Epic sample mod description!!!\r\nSample my epic mod!! description mode activate!@!!@!@!
-                    </div>
-                </div>
-                <div class="details_side_panel" id="details_side_panel">
-                    Upvotes: 0
-                    Downvotes: 0
-                    subscriptions: 0
-                    current_subscribers: 0
-                    commnents: 0
+                    <div class="details_side_panel" id="details_side_panel">
+                        Upvotes: 0
+                        Downvotes: 0
+                        subscriptions: 0
+                        current_subscribers: 0
+                        commnents: 0
 
+                    </div>
                 </div>
             </div>
             <button class="details_exit_button" onclick="close_details();">GO BACK</button>
