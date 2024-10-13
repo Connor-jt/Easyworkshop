@@ -624,13 +624,27 @@ var logon_session_details = null; // contains the response data from our usernam
 
     }
     function create_placeholder_tile(){
-        let mod_tile = document.createElement('img');
+        let mod_tile = document.createElement('div');
         mod_tile.className = 'browser_item_placeholder';
-        mod_tile.src = "RES/logo_cutout_animated.png";
+
+            let mod_preview = document.createElement('img');
+            mod_preview.src = "RES/logo_cutout_animated.png";
+            mod_preview.className = 'browser_item_placeholder_img';
+            mod_tile.appendChild(mod_preview);
+
         browser_gallery.appendChild(mod_tile);
         return mod_tile;
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// #region SCOLL AUTO SEARCH LOADER?? 
+    function check_scroll(){
+
+    }
+
+//#endregion -----------------------------------------------------------------------------------------------------------------
+
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region SEARCH FILTERS + auto loading next pages via scrolling

@@ -220,13 +220,21 @@ body{
 
 
 .browser_gallery_panel{
-    float: right;
+    /* float: right; */
+    clear: both;
+    display: block;
 }
 .browser_item_placeholder{
     background-color: transparent;
     margin: 10px;
     height: 200px;
     width: 150px;
+    display: inline-block;
+    overflow: hidden;
+}
+.browser_item_placeholder_img{
+    width: 150px;
+    aspect-ratio: 1;
     display: inline-block;
     object-fit: contain;
     animation: spin 8000ms linear infinite;
