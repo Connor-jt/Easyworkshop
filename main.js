@@ -181,7 +181,7 @@ var logon_session_details = null; // contains the response data from our usernam
         };
         let query = {
             appid: app_id, 
-            numperpage: 10,
+            numperpage: MODS_PER_PAGE,
             page: page_index,
             queryType: sort_by, 
             //dateRangeCreated: {timestampStart: date_to_steam_date(new Date()), timestampEnd: steam_time_now()},
@@ -200,7 +200,7 @@ var logon_session_details = null; // contains the response data from our usernam
         let serialized = SerializePacket([0x97, 0x00, 0x00, 0x80], header, CMsgHeader_Message, query, CPublishedFile_QueryFiles_Message);
         WS.send(serialized);
     
-        return jobid;
+        return jobid.toString();
     }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
@@ -314,11 +314,14 @@ var logon_session_details = null; // contains the response data from our usernam
         } else if (message_type == 146){ // ServiceMethod
 
         } else if (message_type == 147){ // ServiceMethodResponse
-            
-            let response_obj = proto_deserialize(buffer.subarray(read_position), CPublishedFile_QueryFilesResponse_Message);
-            ingest_mod_list(response_obj);
-            console.log(response_obj);
-            print("recieved query response!!", true);
+            // mod query response
+            if (header_object.targetJobName === "PublishedFile.QueryFiles#1"){
+                let response_obj = proto_deserialize(buffer.subarray(read_position), CPublishedFile_QueryFilesResponse_Message);
+                console.log(header_object);
+                console.log(response_obj);
+                ingest_mod_list(response_obj, header_object.jobidTarget.toString());
+                print("recieved query response!!", true);
+            }
         }
 
         return;
@@ -484,9 +487,18 @@ var logon_session_details = null; // contains the response data from our usernam
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region POPULATE MOD GALLERY
     const browser_gallery = document.getElementById("browser_gallery_view");
+    const results_display = document.getElementById("results_display");
     var loaded_gallery_tiles = {};
-    function ingest_mod_list(mods){
+    function ingest_mod_list(mods, jobid){
+        if (jobid != active_query_id) {print("recieved mod query response with wrong jobid!!"); return;}
 
+        // remove placeholder query object
+        if (active_query_placeholder != null) {
+            browser_gallery.removeChild(active_query_placeholder);
+            active_query_placeholder = null;
+        }
+
+        results_display.innerText = "" + (curr_page_index*MODS_PER_PAGE) + "/" + mods.total + " results";
         let arr = mods.publishedfiledetails;
         for (let i = 0; i < arr.length; i++){
             let curr_mod = arr[i]
@@ -566,15 +578,27 @@ var logon_session_details = null; // contains the response data from our usernam
         browser_gallery.appendChild(mod_tile);
 
     }
+    function create_placeholder_tile(){
+        let mod_tile = document.createElement('img');
+        mod_tile.className = 'browser_item_placeholder';
+        mod_tile.src = "RES/logo_cutout_animated.png";
+        browser_gallery.appendChild(mod_tile);
+        return mod_tile;
+    }
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
-// #region SEARCH FILTERS 
+// #region SEARCH FILTERS + auto loading next pages via scrolling
     const sort_field = document.getElementById("sort_select");
     const search_field = document.getElementById("search_field");
     var curr_sort_type = 0;
     var curr_filter_string = null;
     var curr_page_index = 1
+    const MODS_PER_PAGE = 50;
+
+    var active_query_id = "";
+    var active_query_placeholder = null;
+
     function search_run(){
         if (ACTIVE_PAGE != BROWSE_PAGE){ print("cant make searches while not browsing!! what the hell??"); return; }
 
@@ -600,7 +624,9 @@ var logon_session_details = null; // contains the response data from our usernam
         browser_gallery.replaceChildren();
         loaded_gallery_tiles = {}; // clear thingos
 
-        Steam_SendWorkshopQuery(105600, curr_sort_type, curr_page_index, curr_filter_string);
+        // store query to list so we can match up the data later
+        active_query_id = Steam_SendWorkshopQuery(105600, curr_sort_type, curr_page_index, curr_filter_string);
+        active_query_placeholder = create_placeholder_tile();
     }
     
 //#endregion -----------------------------------------------------------------------------------------------------------------
