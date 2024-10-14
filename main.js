@@ -363,6 +363,7 @@ var logon_session_details = null; // contains the response data from our usernam
                     print("recieved query response!!", true);
                 } else {
                     print("recieved query response with no erntries", false);
+                    ingest_mod_list({publishedfiledetails:[], total:0}, header_object.jobidTarget.toString());
                 }
             }
         }
