@@ -640,7 +640,9 @@ var logon_session_details = null; // contains the response data from our usernam
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region SCOLL AUTO SEARCH LOADER?? 
     function check_scroll(){
+        if (curr_page_index != null){
 
+        }
     }
 
 //#endregion -----------------------------------------------------------------------------------------------------------------
@@ -648,19 +650,29 @@ var logon_session_details = null; // contains the response data from our usernam
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region SEARCH FILTERS + auto loading next pages via scrolling
+    const gameid_field = document.getElementById("gameid_field");
     const sort_field = document.getElementById("sort_select");
     const search_field = document.getElementById("search_field");
     const date_filter_display = document.getElementById("date_filter_display");
-    var curr_sort_type = 0;
-    var curr_filter_string = null;
-    var curr_page_index = 1
+    // current search values
+        var curr_sort_type = 0;
+        var curr_filter_string = null;
+        var curr_page_index = null;
+        var curr_game_id = null;
+
+        var active_query_id = "";
+        var active_query_placeholder = null;
+    //
+
     const MODS_PER_PAGE = 50;
 
-    var active_query_id = "";
-    var active_query_placeholder = null;
 
     function search_run(){
         if (ACTIVE_PAGE != BROWSE_PAGE){ print("cant make searches while not browsing!! what the hell??"); return; }
+
+        // get target game
+        try{curr_game_id = Number(gameid_field.value);
+        } catch (ex){ print("Bad game ID !!!"); return; }
 
         // get sorting type
         curr_sort_type = 0;
@@ -671,6 +683,7 @@ var logon_session_details = null; // contains the response data from our usernam
         else if (sort_field.value == "relevance"      ){ curr_sort_type = 11; } // k_EUGCQuery_RankedByTextSearch           	11	Sort by keyword text search relevancy
         else { print("invalid sort by selection!!!"); return; }
         console.log(sort_field.value);
+
 
         // get search string    
         curr_filter_string = null;
@@ -700,7 +713,7 @@ var logon_session_details = null; // contains the response data from our usernam
         //}
 
         // store query to list so we can match up the data later
-        active_query_id = Steam_SendWorkshopQuery(105600, curr_sort_type, curr_page_index, curr_filter_string);
+        active_query_id = Steam_SendWorkshopQuery(curr_game_id, curr_sort_type, curr_page_index, curr_filter_string);
         active_query_placeholder = create_placeholder_tile();
     }
     
