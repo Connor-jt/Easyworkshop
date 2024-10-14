@@ -641,6 +641,9 @@ var logon_session_details = null; // contains the response data from our usernam
 // #region SCOLL AUTO SEARCH LOADER?? 
     const browser_scroller = document.getElementById("browser_scroller");
     function check_scroll(){
+        // DO NOT SCROLL IF NOT ON BROWSE PAGE???
+        if (ACTIVE_PAGE != BROWSE_PAGE) return;
+
         // make sure we have called a search
         if (curr_page_index == null) return;;
 
