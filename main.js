@@ -533,16 +533,16 @@ var logon_session_details = null; // contains the response data from our usernam
     const results_display = document.getElementById("results_display");
     var loaded_gallery_tiles = {};
     function ingest_mod_list(mods, jobid){
-        console.log(jobid);
-        console.log(active_query_id);
         if (jobid != active_query_id) {print("recieved mod query response with wrong jobid!!"); return;}
 
+        active_query_id = null;
         // remove placeholder query object
         if (active_query_placeholder != null) {
             browser_gallery.removeChild(active_query_placeholder);
             active_query_placeholder = null;
         }
 
+        total_num_of_results = mods.total;
         results_display.innerText = "" + (curr_page_index*MODS_PER_PAGE) + "/" + short_string_number(mods.total) + " results";
         let arr = mods.publishedfiledetails;
         for (let i = 0; i < arr.length; i++){
@@ -639,12 +639,32 @@ var logon_session_details = null; // contains the response data from our usernam
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // #region SCOLL AUTO SEARCH LOADER?? 
+    const browser_scroller = document.getElementById("browser_scroller");
     function check_scroll(){
-        if (curr_page_index != null){
+        // make sure we have called a search
+        if (curr_page_index == null) return;;
 
+        // make sure we aren't awaiting a query result
+        if (active_query_id != null) return;
+
+        // make sure we have a total number of mods loaded (implying we've already recieved the first batch of results??)
+        if (total_num_of_results == null) return;
+
+        // make sure theres another page past the current one??
+        if (total_num_of_results <= curr_page_index * MODS_PER_PAGE) return;
+
+
+        let pixels_from_bottom = browser_scroller.scrollHeight - (browser_scroller.offsetHeight + browser_scroller.scrollTop);
+
+        if (Number.isInteger(pixels_from_bottom) && pixels_from_bottom <= 100){
+            print("queuing next search!!", true);
+            curr_page_index += 1;
+            
+            active_query_id = Steam_SendWorkshopQuery(curr_game_id, curr_sort_type, curr_page_index, curr_filter_string);
+            active_query_placeholder = create_placeholder_tile();
         }
     }
-
+    setInterval(check_scroll, 500);
 //#endregion -----------------------------------------------------------------------------------------------------------------
 
 
@@ -660,8 +680,10 @@ var logon_session_details = null; // contains the response data from our usernam
         var curr_page_index = null;
         var curr_game_id = null;
 
-        var active_query_id = "";
+        var active_query_id = null;
         var active_query_placeholder = null;
+
+        var total_num_of_results = null;
     //
 
     const MODS_PER_PAGE = 50;
@@ -669,6 +691,10 @@ var logon_session_details = null; // contains the response data from our usernam
 
     function search_run(){
         if (ACTIVE_PAGE != BROWSE_PAGE){ print("cant make searches while not browsing!! what the hell??"); return; }
+        // make sure we finish our current search first??
+        if (active_query_id != null && curr_page_index === 1){ 
+            print("wait for the first search to finish first???"); return; 
+        }
 
         // get target game
         try{curr_game_id = Number(gameid_field.value);
@@ -684,6 +710,8 @@ var logon_session_details = null; // contains the response data from our usernam
         else { print("invalid sort by selection!!!"); return; }
         console.log(sort_field.value);
 
+        // reset results count
+        total_num_of_results = null;
 
         // get search string    
         curr_filter_string = null;
