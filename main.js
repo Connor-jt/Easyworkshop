@@ -1,5 +1,13 @@
 import Long from "./long.js";
 
+// some reminders 
+// 1281930 - TModLoader gameID
+// 976730 - Halo MCC gameID 
+// run server command // http-server -c-1 -p 8080
+// access server http // http://localhost:8080/
+
+
+
 var WS = null; // our websocket handle to the steam servers
 var logon_session_header = null;
 var logon_session_details = null; // contains the response data from our username+password logon (steam ID etc)
