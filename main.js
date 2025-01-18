@@ -405,7 +405,7 @@ var logon_session_details = null; // contains the response data from our usernam
     function init_steam_connection(username, password){
         if (CMsgHeader_Message == null) throw "protobuf hasn't init yet!!";
 
-        let custom_input_server = "cmp2-fra1.steamserver.net:27019";
+        let custom_input_server = "cmp1-hkg1.steamserver.net:27023"; // cmp2-fra1.steamserver.net:27019
 
         let WSS_SERVER = "wss://"+custom_input_server+"/cmsocket/";
         WS = new WebSocket(WSS_SERVER)
