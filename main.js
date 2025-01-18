@@ -1,4 +1,4 @@
-import Long from "/long.js";
+import Long from "./long.js";
 
 var WS = null; // our websocket handle to the steam servers
 var logon_session_header = null;
