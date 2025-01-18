@@ -1,4 +1,4 @@
-import Long from "/DEPENDENCIES/Long.js";
+import Long from "Long.js";
 
 var WS = null; // our websocket handle to the steam servers
 var logon_session_header = null;
